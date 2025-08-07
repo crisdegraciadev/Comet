@@ -1,0 +1,40 @@
+services:
+  dev_db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: raffley_dev
+    volumes:
+      - dev_db_data:/var/lib/postgresql/data
+    ports:
+      - "5437:5432"
+
+  test_db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: raffley_test
+    volumes:
+      - test_db_data:/var/lib/postgresql/data
+    ports:
+      - "5438:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5052:80"
+    depends_on:
+      - dev_db
+      - test_db
+
+volumes:
+  dev_db_data:
+  test_db_data:
