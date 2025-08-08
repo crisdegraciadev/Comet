@@ -1,0 +1,23 @@
+.sidebar .menu {
+  justify-content: space-between;
+}
+
+.sidebar {
+  .navigation {
+    .menu {
+      margin-top: var(--space-l);
+    }
+  }
+
+  .user-settings {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+
+    .info {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
