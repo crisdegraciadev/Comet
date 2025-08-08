@@ -419,6 +419,56 @@ defmodule CometWeb.CoreComponents do
     """
   end
 
+  attr :size, :string, values: ~w(large medium small), default: "medium"
+  attr :email, :string, default: "joseph@email.com"
+
+  def avatar(assigns) do
+    {wrapper_size, text_size} =
+      case assigns.size do
+        "large" -> {"w-24", "text-3xl"}
+        "medium" -> {"w-16", "text-xl"}
+        "small" -> {"w-10", "text-base"}
+        "xsmall" -> {"w-8", "text-xs"}
+      end
+
+    placeholder_char = assigns.email |> String.at(0) |> String.upcase()
+
+    assigns =
+      assigns
+      |> assign(%{
+        wrapper_size: wrapper_size,
+        text_size: text_size,
+        placeholder_char: placeholder_char
+      })
+
+    ~H"""
+    <div class="avatar avatar-placeholder">
+      <div class={["bg-neutral text-neutral-content  rounded", @wrapper_size]}>
+        <span class={@text_size}>{@placeholder_char}</span>
+      </div>
+    </div>
+    """
+  end
+
+  attr :position, :string, default: "dropdown-bottom"
+  attr :class, :string, default: nil
+
+  slot :trigger, required: true
+  slot :actions, required: true
+
+  def dropdown(assigns) do
+    ~H"""
+    <div class={["dropdown", @position, @class]}>
+      <div class="cursor-pointer" tabindex="0" role="button">{render_slot(@trigger)}</div>
+      <ul tabindex="0" class="dropdown-content menu bg-base-300 rounded-box w-52 p-2 shadow-sm">
+        <li :for={action <- @actions}>
+          {render_slot(action)}
+        </li>
+      </ul>
+    </div>
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do
