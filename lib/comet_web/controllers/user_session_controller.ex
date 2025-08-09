@@ -55,7 +55,7 @@ defmodule CometWeb.UserSessionController do
     UserAuth.disconnect_sessions(expired_tokens)
 
     conn
-    |> put_session(:user_return_to, ~p"/users/settings")
+    |> put_session(:user_return_to, ~p"/settings/account")
     |> create(params, "Password updated successfully!")
   end
 
