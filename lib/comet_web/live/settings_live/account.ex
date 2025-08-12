@@ -1,4 +1,4 @@
-defmodule CometWeb.UserLive.Settings do
+defmodule CometWeb.SettingsLive.Account do
   use CometWeb, :live_view
 
   on_mount {CometWeb.UserAuth, :require_sudo_mode}
@@ -8,7 +8,11 @@ defmodule CometWeb.UserLive.Settings do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app
+      flash={@flash}
+      current_scope={@current_scope}
+      current_module={["settings", "account"]}
+    >
       <div class="text-center">
         <.header>
           Account Settings
@@ -77,7 +81,7 @@ defmodule CometWeb.UserLive.Settings do
           put_flash(socket, :error, "Email change link is invalid or it has expired.")
       end
 
-    {:ok, push_navigate(socket, to: ~p"/users/settings")}
+    {:ok, push_navigate(socket, to: ~p"/settings/account")}
   end
 
   def mount(_params, _session, socket) do
@@ -118,7 +122,7 @@ defmodule CometWeb.UserLive.Settings do
         Accounts.deliver_user_update_email_instructions(
           Ecto.Changeset.apply_action!(changeset, :insert),
           user.email,
-          &url(~p"/users/settings/confirm-email/#{&1}")
+          &url(~p"/settings/account/confirm-email/#{&1}")
         )
 
         info = "A link to confirm your email change has been sent to the new address."

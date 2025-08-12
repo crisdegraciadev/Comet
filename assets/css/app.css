@@ -1,5 +1,8 @@
-@import "./config.css";
-
 @import "./libs/daisyui.css";
 @import "./libs/heroicons.css";
 @import "./libs/tailwind.css";
+
+@import "./core/config.css";
+@import "./core/vars.css";
+
+@import "./components/sidebar.css";

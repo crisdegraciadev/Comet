@@ -6,7 +6,7 @@ defmodule CometWeb.UserLive.Login do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.login flash={@flash} current_scope={@current_scope}>
       <div class="mx-auto max-w-sm space-y-4">
         <div class="text-center">
           <.header>
@@ -88,7 +88,7 @@ defmodule CometWeb.UserLive.Login do
           </.button>
         </.form>
       </div>
-    </Layouts.app>
+    </Layouts.login>
     """
   end
 
