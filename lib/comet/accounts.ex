@@ -75,9 +75,21 @@ defmodule Comet.Accounts do
 
   """
   def register_user(attrs) do
-    %User{}
-    |> User.email_changeset(attrs)
-    |> Repo.insert()
+    Repo.transaction(fn ->
+      with {:ok, user} <- %User{} |> User.email_changeset(attrs) |> Repo.insert() do
+        # Crear profile vacío asociado
+        %Comet.Accounts.Profile{}
+        |> Comet.Accounts.Profile.changeset(%{}, %{user: user})
+        |> Repo.insert()
+        {:ok, user}
+      else
+        error -> Repo.rollback(error)
+      end
+    end)
+    |> case do
+      {:ok, {:ok, user}} -> {:ok, user}
+      {:error, error} -> error
+    end
   end
 
   ## Settings
@@ -293,5 +305,21 @@ defmodule Comet.Accounts do
         {:ok, {user, tokens_to_expire}}
       end
     end)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user profile.
+  """
+  def change_profile(profile, attrs \\ %{}) do
+    Comet.Accounts.Profile.changeset(profile, attrs, %{user: profile.user}, require_fields: true)
+  end
+
+  @doc """
+  Updates the user profile.
+  """
+  def update_profile(profile, attrs) do
+    profile
+    |> Comet.Accounts.Profile.changeset(attrs, %{user: profile.user}, require_fields: true)
+    |> Repo.update()
   end
 end
