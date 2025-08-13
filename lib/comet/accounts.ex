@@ -60,6 +60,15 @@ defmodule Comet.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Builds a changeset for a new profile for the given user.
+  This function is used when a user is created and their profile does not yet exist.
+  """
+  def build_profile_for_user(user) do
+    %Comet.Accounts.Profile{}
+    |> Comet.Accounts.Profile.changeset(%{}, %{user: user})
+  end
+
   ## User registration
 
   @doc """
@@ -77,9 +86,7 @@ defmodule Comet.Accounts do
   def register_user(attrs) do
     Repo.transaction(fn ->
       with {:ok, user} <- %User{} |> User.email_changeset(attrs) |> Repo.insert() do
-        # Crear profile vacío asociado
-        %Comet.Accounts.Profile{}
-        |> Comet.Accounts.Profile.changeset(%{}, %{user: user})
+        build_profile_for_user(user)
         |> Repo.insert()
         {:ok, user}
       else
