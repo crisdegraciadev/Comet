@@ -12,8 +12,8 @@ defmodule CometWeb.Layouts do
   def app(assigns) do
     ~H"""
     <.sidebar current_scope={@current_scope} current_module={@current_module}>
-      <main class="px-4 py-20 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl space-y-4">
+      <main class="px-4 py-20 lg:px-8 flex justify-center">
+        <div class="space-y-4 w-full">
           {render_slot(@inner_block)}
         </div>
       </main>
@@ -24,9 +24,27 @@ defmodule CometWeb.Layouts do
   end
 
   attr :flash, :map, required: true, doc: "the map of flash messages"
-
   attr :current_scope, :map, default: nil
+  attr :current_module, :list, default: ["/", ""]
 
+  slot :inner_block, required: true
+
+  def settings(assigns) do
+    ~H"""
+    <.sidebar current_scope={@current_scope} current_module={@current_module}>
+      <main class="px-4 py-20 lg:px-8">
+        <div class="mx-auto space-y-4 max-w-2xl">
+          {render_slot(@inner_block)}
+        </div>
+      </main>
+    </.sidebar>
+
+    <.flash_group flash={@flash} />
+    """
+  end
+
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :current_scope, :map, default: nil
   slot :inner_block, required: true
 
   def login(assigns) do
@@ -138,7 +156,11 @@ defmodule CometWeb.Layouts do
             <ul class="menu bg-base-200 text-base-content min-h-full w-full">
               <li><.link href={~p"/"}><.icon name="hero-home" />Home</.link></li>
               <li><.link href={~p"/"}><.icon name="hero-magnifying-glass" />Browser</.link></li>
-              <li><.link href={~p"/"}><.icon name="hero-rectangle-stack" />Backlog</.link></li>
+              <li>
+                <.link href={~p"/backlog/pending"}>
+                  <.icon name="hero-rectangle-stack" />Backlog
+                </.link>
+              </li>
             </ul>
           </div>
 
@@ -214,6 +236,13 @@ defmodule CometWeb.Layouts do
        {"Account", ~p"/settings/account"},
        {"Profile", ~p"/settings/profile"},
        {"API", ~p"/settings/api_key"}
+     ]}
+  end
+
+  defp topbar_module("backlog") do
+    {"Backlog",
+     [
+       {"Pending", ~p"/backlog/pending"}
      ]}
   end
 end

@@ -8,7 +8,7 @@ defmodule CometWeb.SettingsLive.ApiKey do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app
+    <Layouts.settings
       flash={@flash}
       current_scope={@current_scope}
       current_module={["settings", "api_key"]}
@@ -33,7 +33,7 @@ defmodule CometWeb.SettingsLive.ApiKey do
         />
         <.button variant="primary" phx-disable-with="Saving...">Save API Key</.button>
       </.form>
-    </Layouts.app>
+    </Layouts.settings>
     """
   end
 

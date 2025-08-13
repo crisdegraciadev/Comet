@@ -8,7 +8,7 @@ defmodule CometWeb.SettingsLive.Account do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app
+    <Layouts.settings
       flash={@flash}
       current_scope={@current_scope}
       current_module={["settings", "account"]}
@@ -66,7 +66,7 @@ defmodule CometWeb.SettingsLive.Account do
           Save Password
         </.button>
       </.form>
-    </Layouts.app>
+    </Layouts.settings>
     """
   end
 
