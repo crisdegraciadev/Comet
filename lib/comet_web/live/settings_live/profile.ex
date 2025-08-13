@@ -1,25 +1,9 @@
-
 defmodule CometWeb.SettingsLive.Profile do
   use CometWeb, :live_view
 
   alias Comet.Accounts
 
   on_mount {CometWeb.UserAuth, :require_sudo_mode}
-
-  @impl true
-  def mount(_params, _session, socket) do
-    user = socket.assigns.current_scope.user |> Comet.Repo.preload(profile: :user)
-    profile = user.profile
-    changeset = Accounts.change_profile(profile)
-
-    socket =
-      socket
-      |> assign(:profile, profile)
-      |> assign(:profile_form, to_form(changeset))
-      |> assign(:trigger_submit, false)
-
-    {:ok, socket}
-  end
 
   @impl true
   def render(assigns) do
@@ -36,7 +20,12 @@ defmodule CometWeb.SettingsLive.Profile do
         </.header>
       </div>
 
-      <.form for={@profile_form} id="profile_form" phx-submit="update_profile" phx-change="validate_profile">
+      <.form
+        for={@profile_form}
+        id="profile_form"
+        phx-submit="update_profile"
+        phx-change="validate_profile"
+      >
         <.input
           field={@profile_form[:username]}
           type="text"
@@ -59,6 +48,21 @@ defmodule CometWeb.SettingsLive.Profile do
       </.form>
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def mount(_params, _session, socket) do
+    user = socket.assigns.current_scope.user |> Comet.Repo.preload(profile: :user)
+    profile = user.profile
+    changeset = Accounts.change_profile(profile)
+
+    socket =
+      socket
+      |> assign(:profile, profile)
+      |> assign(:profile_form, to_form(changeset))
+      |> assign(:trigger_submit, false)
+
+    {:ok, socket}
   end
 
   @impl true

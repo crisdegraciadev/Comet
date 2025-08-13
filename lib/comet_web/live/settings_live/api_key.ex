@@ -6,21 +6,6 @@ defmodule CometWeb.SettingsLive.ApiKey do
   on_mount {CometWeb.UserAuth, :require_sudo_mode}
 
   @impl true
-  def mount(_params, _session, socket) do
-    user = socket.assigns.current_scope.user |> Comet.Repo.preload(profile: :user)
-    profile = user.profile
-    changeset = Accounts.change_profile(profile)
-
-    socket =
-      socket
-      |> assign(:profile, profile)
-      |> assign(:api_key_form, to_form(changeset))
-      |> assign(:trigger_submit, false)
-
-    {:ok, socket}
-  end
-
-  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app
@@ -35,7 +20,12 @@ defmodule CometWeb.SettingsLive.ApiKey do
         </.header>
       </div>
 
-      <.form for={@api_key_form} id="api_key_form" phx-submit="update_api_key" phx-change="validate_api_key">
+      <.form
+        for={@api_key_form}
+        id="api_key_form"
+        phx-submit="update_api_key"
+        phx-change="validate_api_key"
+      >
         <.input
           field={@api_key_form[:api_key]}
           type="text"
@@ -45,6 +35,21 @@ defmodule CometWeb.SettingsLive.ApiKey do
       </.form>
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def mount(_params, _session, socket) do
+    user = socket.assigns.current_scope.user |> Comet.Repo.preload(profile: :user)
+    profile = user.profile
+    changeset = Accounts.change_profile(profile)
+
+    socket =
+      socket
+      |> assign(:profile, profile)
+      |> assign(:api_key_form, to_form(changeset))
+      |> assign(:trigger_submit, false)
+
+    {:ok, socket}
   end
 
   @impl true
