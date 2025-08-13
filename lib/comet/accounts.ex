@@ -85,7 +85,12 @@ defmodule Comet.Accounts do
   """
   def register_user(attrs) do
     Repo.transaction(fn ->
-      with {:ok, user} <- %User{} |> User.email_changeset(attrs) |> Repo.insert() do
+      changeset =
+        %User{}
+        |> User.email_changeset(attrs)
+        |> User.password_changeset(attrs)
+
+      with {:ok, user} <- Repo.insert(changeset) do
         build_profile_for_user(user)
         |> Repo.insert()
         {:ok, user}
@@ -312,6 +317,18 @@ defmodule Comet.Accounts do
         {:ok, {user, tokens_to_expire}}
       end
     end)
+  end
+
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user registration.
+  This function is used when a user is registering for the first time.
+  It includes email and password changesets.
+  """
+  def change_user_registration(user, attrs \\ %{}) do
+    user
+    |> User.email_changeset(attrs)
+    |> User.password_changeset(attrs)
   end
 
   @doc """
