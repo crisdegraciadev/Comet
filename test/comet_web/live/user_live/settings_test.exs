@@ -18,7 +18,6 @@ defmodule CometWeb.UserLive.SettingsTest do
 
     test "redirects if user is not logged in", %{conn: conn} do
       assert {:error, redirect} = live(conn, ~p"/settings/account")
-
       assert {:redirect, %{to: path, flash: flash}} = redirect
       assert path == ~p"/users/log-in"
       assert %{"error" => "You must log in to access this page."} = flash
@@ -43,20 +42,18 @@ defmodule CometWeb.UserLive.SettingsTest do
       %{conn: log_in_user(conn, user), user: user}
     end
 
-    test "updates the user email", %{conn: conn, user: user} do
+    test "updates the user email directly", %{conn: conn, user: user} do
       new_email = unique_user_email()
 
       {:ok, lv, _html} = live(conn, ~p"/settings/account")
 
       result =
         lv
-        |> form("#email_form", %{
-          "user" => %{"email" => new_email}
-        })
+        |> form("#email_form", %{"user" => %{"email" => new_email}})
         |> render_submit()
 
-      assert result =~ "A link to confirm your email"
-      assert Accounts.get_user_by_email(user.email)
+      assert result =~ "Email updated successfully"
+      assert Accounts.get_user_by_email(new_email)
     end
 
     test "renders errors with invalid data (phx-change)", %{conn: conn} do
@@ -79,9 +76,7 @@ defmodule CometWeb.UserLive.SettingsTest do
 
       result =
         lv
-        |> form("#email_form", %{
-          "user" => %{"email" => user.email}
-        })
+        |> form("#email_form", %{"user" => %{"email" => user.email}})
         |> render_submit()
 
       assert result =~ "Change Email"
@@ -114,12 +109,9 @@ defmodule CometWeb.UserLive.SettingsTest do
       new_password_conn = follow_trigger_action(form, conn)
 
       assert redirected_to(new_password_conn) == ~p"/settings/account"
-
       assert get_session(new_password_conn, :user_token) != get_session(conn, :user_token)
-
       assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
                "Password updated successfully"
-
       assert Accounts.get_user_by_email_and_password(user.email, new_password)
     end
 
@@ -157,56 +149,6 @@ defmodule CometWeb.UserLive.SettingsTest do
       assert result =~ "Save Password"
       assert result =~ "should be at least 12 character(s)"
       assert result =~ "does not match password"
-    end
-  end
-
-  describe "confirm email" do
-    setup %{conn: conn} do
-      user = user_fixture()
-      email = unique_user_email()
-
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_user_update_email_instructions(%{user | email: email}, user.email, url)
-        end)
-
-      %{conn: log_in_user(conn, user), token: token, email: email, user: user}
-    end
-
-    test "updates the user email once", %{conn: conn, user: user, token: token, email: email} do
-      {:error, redirect} = live(conn, ~p"/settings/account/confirm-email/#{token}")
-
-      assert {:live_redirect, %{to: path, flash: flash}} = redirect
-      assert path == ~p"/settings/account"
-      assert %{"info" => message} = flash
-      assert message == "Email changed successfully."
-      refute Accounts.get_user_by_email(user.email)
-      assert Accounts.get_user_by_email(email)
-
-      # use confirm token again
-      {:error, redirect} = live(conn, ~p"/settings/account/confirm-email/#{token}")
-      assert {:live_redirect, %{to: path, flash: flash}} = redirect
-      assert path == ~p"/settings/account"
-      assert %{"error" => message} = flash
-      assert message == "Email change link is invalid or it has expired."
-    end
-
-    test "does not update email with invalid token", %{conn: conn, user: user} do
-      {:error, redirect} = live(conn, ~p"/settings/account/confirm-email/oops")
-      assert {:live_redirect, %{to: path, flash: flash}} = redirect
-      assert path == ~p"/settings/account"
-      assert %{"error" => message} = flash
-      assert message == "Email change link is invalid or it has expired."
-      assert Accounts.get_user_by_email(user.email)
-    end
-
-    test "redirects if user is not logged in", %{token: token} do
-      conn = build_conn()
-      {:error, redirect} = live(conn, ~p"/settings/account/confirm-email/#{token}")
-      assert {:redirect, %{to: path, flash: flash}} = redirect
-      assert path == ~p"/users/log-in"
-      assert %{"error" => message} = flash
-      assert message == "You must log in to access this page."
     end
   end
 end
