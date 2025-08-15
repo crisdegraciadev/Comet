@@ -2,6 +2,8 @@
    https://tailwindcss.com/docs/configuration */
 
 @import "tailwindcss";
+
 @source "../../css";
 @source "../../js";
 @source "../../../lib/comet_web";
+@source "../../node_modules/daisyui";

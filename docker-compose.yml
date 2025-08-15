@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: raffley_dev
+      POSTGRES_DB: comet_dev
     volumes:
       - dev_db_data:/var/lib/postgresql/data
     ports:
@@ -17,7 +17,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: raffley_test
+      POSTGRES_DB: comet_test
     volumes:
       - test_db_data:/var/lib/postgresql/data
     ports:

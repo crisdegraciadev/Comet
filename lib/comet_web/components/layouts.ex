@@ -12,8 +12,8 @@ defmodule CometWeb.Layouts do
   def app(assigns) do
     ~H"""
     <.sidebar current_scope={@current_scope} current_module={@current_module}>
-      <main class="px-4 py-20 lg:px-8 flex justify-center">
-        <div class="space-y-4 w-full">
+      <main class="px-4 py-8 lg:px-8 flex justify-center">
+        <div class="space-y-6 w-full">
           {render_slot(@inner_block)}
         </div>
       </main>
@@ -157,7 +157,7 @@ defmodule CometWeb.Layouts do
               <li><.link href={~p"/"}><.icon name="hero-home" />Home</.link></li>
               <li><.link href={~p"/"}><.icon name="hero-magnifying-glass" />Browser</.link></li>
               <li>
-                <.link href={~p"/backlog/pending"}>
+                <.link href={~p"/backlog/collection"}>
                   <.icon name="hero-rectangle-stack" />Backlog
                 </.link>
               </li>
@@ -206,7 +206,8 @@ defmodule CometWeb.Layouts do
       assigns
       |> assign(%{
         title: title,
-        tabs: tabs
+        tabs: tabs,
+        sub_path: sub_path
       })
 
     ~H"""
@@ -216,7 +217,7 @@ defmodule CometWeb.Layouts do
         <div class="navigation">
           <a
             :for={{label, path} <- @tabs}
-            class={["nav-item", String.contains?(path, sub_path) && "nav-item-active"]}
+            class={["nav-item", String.contains?(path, @sub_path) && "nav-item-active"]}
             href={path}
           >
             {label}
@@ -242,7 +243,7 @@ defmodule CometWeb.Layouts do
   defp topbar_module("backlog") do
     {"Backlog",
      [
-       {"Pending", ~p"/backlog/pending"}
+       {"Collection", ~p"/backlog/collection"}
      ]}
   end
 end
