@@ -100,9 +100,7 @@ defmodule CometWeb.SettingsLive.Account do
   end
 
   @impl true
-  def handle_event("validate_email", params, socket) do
-    %{"user" => user_params} = params
-
+  def handle_event("validate_email", %{"user" => user_params}, socket) do
     email_form =
       socket.assigns.current_scope.user
       |> Accounts.change_user_email(user_params, validate_unique: false)
@@ -112,30 +110,23 @@ defmodule CometWeb.SettingsLive.Account do
     {:noreply, assign(socket, email_form: email_form)}
   end
 
-  def handle_event("update_email", params, socket) do
-    %{"user" => user_params} = params
+  def handle_event("update_email", %{"user" => %{"email" => new_email}}, socket) do
     user = socket.assigns.current_scope.user
     true = Accounts.sudo_mode?(user)
 
-    case Accounts.change_user_email(user, user_params) do
-      %{valid?: true} = changeset ->
-        Accounts.deliver_user_update_email_instructions(
-          Ecto.Changeset.apply_action!(changeset, :insert),
-          user.email,
-          &url(~p"/settings/account/confirm-email/#{&1}")
-        )
+    case Accounts.update_user_email_without_confirmation(user, new_email) do
+      {:ok, user} ->
+        {:noreply,
+          socket
+          |> put_flash(:info, "Email updated successfully.")
+          |> assign(:current_email, user.email)}
 
-        info = "A link to confirm your email change has been sent to the new address."
-        {:noreply, socket |> put_flash(:info, info)}
-
-      changeset ->
-        {:noreply, assign(socket, :email_form, to_form(changeset, action: :insert))}
+      {:error, changeset} ->
+        {:noreply, assign(socket, email_form: to_form(changeset, action: :insert))}
     end
   end
 
-  def handle_event("validate_password", params, socket) do
-    %{"user" => user_params} = params
-
+  def handle_event("validate_password", %{"user" => user_params}, socket) do
     password_form =
       socket.assigns.current_scope.user
       |> Accounts.change_user_password(user_params, hash_password: false)
@@ -145,8 +136,7 @@ defmodule CometWeb.SettingsLive.Account do
     {:noreply, assign(socket, password_form: password_form)}
   end
 
-  def handle_event("update_password", params, socket) do
-    %{"user" => user_params} = params
+  def handle_event("update_password", %{"user" => user_params}, socket) do
     user = socket.assigns.current_scope.user
     true = Accounts.sudo_mode?(user)
 
