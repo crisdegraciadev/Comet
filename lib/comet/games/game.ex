@@ -5,6 +5,7 @@ defmodule Comet.Games.Game do
   schema "games" do
     field :name, :string
     field :cover, :string
+    field :hero, :string
     field :status, Ecto.Enum, values: [:completed, :in_progress, :pending], default: :pending
 
     field :platform, Ecto.Enum,
@@ -32,8 +33,8 @@ defmodule Comet.Games.Game do
   @doc false
   def changeset(game, attrs, user_scope) do
     game
-    |> cast(attrs, [:name, :cover, :status, :platform])
-    |> validate_required([:name, :cover, :status, :platform])
+    |> cast(attrs, [:name, :cover, :hero, :status, :platform])
+    |> validate_required([:name, :cover, :hero, :status, :platform])
     |> put_change(:user_id, user_scope.user.id)
   end
 end
