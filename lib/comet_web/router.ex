@@ -46,6 +46,10 @@ defmodule CometWeb.Router do
       live "/api_key", SettingsLive.ApiKey
     end
 
+    scope "/backlog" do
+      live "/collection", BacklogLive.Collection
+    end
+
     post "/users/update-password", UserSessionController, :update_password
   end
 
