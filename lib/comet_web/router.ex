@@ -47,7 +47,10 @@ defmodule CometWeb.Router do
     end
 
     scope "/backlog" do
-      live "/collection", BacklogLive.Collection
+      live "/collection", BacklogLive.Collection, :list
+      live "/collection/:id", BacklogLive.Collection, :show
+      live "/collection/:id/delete", BacklogLive.Collection, :delete
+      live "/collection/:id/edit", BacklogLive.Collection, :edit
     end
 
     post "/users/update-password", UserSessionController, :update_password
