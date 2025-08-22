@@ -3,6 +3,8 @@
 @import "./libs/tailwind.css";
 
 @import "./core/config.css";
+@import "./core/utils.css";
 @import "./core/vars.css";
 
+@import "./components/game-cover.css";
 @import "./components/sidebar.css";
