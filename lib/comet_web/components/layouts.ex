@@ -12,8 +12,8 @@ defmodule CometWeb.Layouts do
   def app(assigns) do
     ~H"""
     <.sidebar current_scope={@current_scope} current_module={@current_module}>
-      <main class="px-4 py-8 lg:px-8 flex justify-center">
-        <div class="space-y-6 w-full">
+      <main class="px-4 py-8 lg:px-10 flex justify-center">
+        <div class="space-y-6 w-full ">
           {render_slot(@inner_block)}
         </div>
       </main>
@@ -100,29 +100,33 @@ defmodule CometWeb.Layouts do
     <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
       <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
 
-      <button
+      <span
         class="flex p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
         <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
+      </span>
 
-      <button
+      <span
         class="flex p-2 cursor-pointer w-1/3"
+        variant="ghost"
+        shape="circle"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
         <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
+      </span>
 
-      <button
+      <span
         class="flex p-2 cursor-pointer w-1/3"
+        variant="ghost"
+        shape="circle"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
         <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
+      </span>
     </div>
     """
   end
@@ -211,7 +215,7 @@ defmodule CometWeb.Layouts do
       })
 
     ~H"""
-    <nav class="topbar navbar justify-between border-b border-base-300">
+    <nav class="topbar navbar justify-between">
       <div class="navbar-start flex items-center">
         <span class="px-4 font-semibold text-xl">{@title}</span>
         <div class="navigation">

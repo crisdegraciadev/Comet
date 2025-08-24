@@ -31,4 +31,12 @@ defmodule Comet.Games.Game.Query do
   end
 
   defp with_platform(query, _), do: query
+
+  def get!(id) when is_integer(id) do
+    Game |> Repo.get!(id)
+  end
+
+  def get!(id) when is_binary(id) do
+    id |> String.to_integer() |> get!()
+  end
 end

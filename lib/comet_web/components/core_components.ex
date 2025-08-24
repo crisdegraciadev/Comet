@@ -36,17 +36,34 @@ defmodule CometWeb.CoreComponents do
           <p>{msg}</p>
         </div>
         <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
-        </button>
+        <.icon name="hero-x-mark" class="size-5 cursor-pointer opacity-40 group-hover:opacity-70" />
       </div>
     </div>
     """
   end
 
   attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
-  attr :class, :string
-  attr :variant, :string, values: ~w(neutral primary secondary accent info success warning error)
+  attr :class, :string, default: nil
+
+  attr :variant, :string,
+    values: [
+      nil,
+      "base",
+      "neutral",
+      "primary",
+      "secondary",
+      "accent",
+      "info",
+      "success",
+      "warning",
+      "error",
+      "ghost",
+      "link"
+    ],
+    default: nil
+
+  attr :size, :string, values: [nil, "xs", "sm", "lg", "xl"], default: nil
+  attr :icon, :string, values: [nil, "square", "circle"], default: nil
   attr :soft, :boolean, default: false
   attr :outline, :boolean, default: false
   attr :dash, :boolean, default: false
@@ -55,24 +72,27 @@ defmodule CometWeb.CoreComponents do
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
-
     assigns =
-      assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
-      end)
+      assigns
+      |> assign(:class, [
+        "btn",
+        assigns[:variant] && "btn-#{assigns[:variant]}",
+        assigns[:size] && "btn-#{assigns[:size]}",
+        assigns[:icon] && "btn-#{assigns[:icon]}",
+        assigns[:soft] && "btn-soft",
+        assigns[:outline] && "btn-outline",
+        assigns[:dash] && "btn-dash",
+        assigns[:active] && "btn-active",
+        assigns[:class]
+      ])
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
-      <.link class={@class} {@rest}>
-        {render_slot(@inner_block)}
-      </.link>
+      <.link class={@class} {@rest}>{render_slot(@inner_block)}</.link>
       """
     else
       ~H"""
-      <button class={@class} {@rest}>
-        {render_slot(@inner_block)}
-      </button>
+      <button class={@class} {@rest}>{render_slot(@inner_block)}</button>
       """
     end
   end
@@ -232,7 +252,7 @@ defmodule CometWeb.CoreComponents do
     values: ~w(primary secondary accent neutral info success warning error),
     default: "success"
 
-  attr :variant, :string, values: ~w(base soft outline dash ghost), default: "base"
+  attr :variant, :string, values: [nil, "soft", "outline", "dash", "ghost"], default: nil
 
   attr :class, :string, default: nil
 
@@ -240,7 +260,13 @@ defmodule CometWeb.CoreComponents do
 
   def badge(assigns) do
     ~H"""
-    <span class={["badge", "badge-#{@size}", "badge-#{@color}", "badge-#{@variant}", @class]}>
+    <span class={[
+      "badge",
+      "badge-#{@size}",
+      "badge-#{@color}",
+      @variant && "badge-#{@variant}",
+      @class
+    ]}>
       {render_slot(@inner_block)}
     </span>
     """
