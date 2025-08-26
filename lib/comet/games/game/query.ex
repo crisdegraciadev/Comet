@@ -36,7 +36,8 @@ defmodule Comet.Games.Game.Query do
     |> Repo.get!(id)
   end
 
-  def get!(%User{} = user, id) when is_binary(id) do
-    id |> String.to_integer() |> get!(user)
-  end
+  def get!(%User{} = user, id) when is_binary(id), do: get!(user, String.to_integer(id))
+
+  def get!(id, %User{} = user) when is_integer(id), do: get!(user, id)
+  def get!(id, %User{} = user) when is_binary(id), do: get!(user, String.to_integer(id))
 end
