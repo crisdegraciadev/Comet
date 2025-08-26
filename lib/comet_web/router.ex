@@ -53,6 +53,10 @@ defmodule CometWeb.Router do
       live "/collection/:id/edit", BacklogLive.Collection, :edit
     end
 
+    scope "/browser" do
+      live "/collection", BrowserLive.Collection
+    end
+
     post "/users/update-password", UserSessionController, :update_password
   end
 
