@@ -14,4 +14,8 @@ defmodule Comet.Games.Game.Command do
   def update(%Game{} = game, %User{} = user, attrs) do
     game |> change(user, attrs) |> Repo.update()
   end
+
+  def create(%User{} = user, attrs) do
+    %Game{} |> change(user, attrs) |> Repo.insert()
+  end
 end
