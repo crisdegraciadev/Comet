@@ -22,38 +22,50 @@ defmodule CometWeb.BacklogLive.Collection do
       <.show_game_modal :if={@live_action == :show} live_action={@live_action} game={@game} />
       <.delete_game_modal :if={@live_action == :delete} game={@game} />
       <.edit_game_modal :if={@live_action == :edit} game={@game} current_scope={@current_scope} />
-      <.image_selector_modal :if={@show_image_selector} images={@image_options} field={@image_selector_field} />
+      <.image_selector_modal
+        :if={@show_image_selector}
+        images={@image_options}
+        field={@image_selector_field}
+      />
     </Layouts.app>
     """
   end
 
   @impl true
-  def mount(_params, _session, %{assigns: %{live_action: :list, current_scope: %{user: user}}} = socket) do
+  def mount(
+        _params,
+        _session,
+        %{assigns: %{live_action: :list, current_scope: %{user: user}}} = socket
+      ) do
     user = Comet.Repo.preload(user, :profile)
 
     {:ok,
-    socket
-    |> stream(:game_list, Game.Query.all(user))
-    |> assign(:current_scope, %{user: user})
-    |> assign(:show_image_selector, false)
-    |> assign(:image_selector_field, nil)
-    |> assign(:image_options, [])}
+     socket
+     |> stream(:game_list, Game.Query.all(user))
+     |> assign(:current_scope, %{user: user})
+     |> assign(:show_image_selector, false)
+     |> assign(:image_selector_field, nil)
+     |> assign(:image_options, [])}
   end
 
   @impl true
-  def mount(%{"id" => id}, _session, %{assigns: %{live_action: live_action, current_scope: %{user: user}}} = socket)
+  def mount(
+        %{"id" => id},
+        _session,
+        %{assigns: %{live_action: live_action, current_scope: %{user: user}}} = socket
+      )
       when live_action != :list do
     user = Comet.Repo.preload(user, :profile)
     game = Game.Query.get!(user, String.to_integer(id))
 
     {:ok,
-    socket
-    |> stream(:game_list, Game.Query.all(user))
-    |> assign(:current_scope, %{user: user})
-    |> assign(:game, game)
-    |> assign(:show_image_selector, false)
-    |> assign(:image_selector_field, nil)
-    |> assign(:image_options, [])}
+     socket
+     |> stream(:game_list, Game.Query.all(user))
+     |> assign(:current_scope, %{user: user})
+     |> assign(:game, game)
+     |> assign(:show_image_selector, false)
+     |> assign(:image_selector_field, nil)
+     |> assign(:image_options, [])}
   end
 
   defp filters(assigns) do
@@ -210,7 +222,7 @@ defmodule CometWeb.BacklogLive.Collection do
   attr :current_scope, :map, default: nil
 
   defp edit_game_modal(assigns) do
-    changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
+    changeset = Game.Command.change(assigns.game, assigns.current_scope.user)
 
     platforms = platforms() |> Map.values()
     statuses = statuses() |> Map.values()
@@ -233,7 +245,6 @@ defmodule CometWeb.BacklogLive.Collection do
           <.input
             field={@form[:name]}
             label="Name"
-            value={@game.name}
             autocomplete="off"
           />
 
@@ -243,7 +254,6 @@ defmodule CometWeb.BacklogLive.Collection do
               type="select"
               label="Platform"
               options={@platforms}
-              value={@game.platform}
               fieldset_class="grow"
             />
             <.input
@@ -251,7 +261,6 @@ defmodule CometWeb.BacklogLive.Collection do
               type="select"
               label="Status"
               options={@statuses}
-              value={@game.status}
               fieldset_class="grow"
             />
           </div>
@@ -261,7 +270,6 @@ defmodule CometWeb.BacklogLive.Collection do
               field={@form[:cover]}
               label="Cover URL"
               placeholder="Cover URL"
-              value={@game.cover}
               autocomplete="off"
             />
             <.button
@@ -280,7 +288,6 @@ defmodule CometWeb.BacklogLive.Collection do
               field={@form[:hero]}
               label="Hero URL"
               placeholder="Hero URL"
-              value={@game.hero}
               autocomplete="off"
             />
             <.button
@@ -305,7 +312,6 @@ defmodule CometWeb.BacklogLive.Collection do
     </.game_modal>
     """
   end
-
 
   attr :id, :string, required: true
   attr :game, Game, required: true
@@ -492,35 +498,37 @@ defmodule CometWeb.BacklogLive.Collection do
     images =
       case field do
         "cover" -> List.wrap(SteamGridDB.get_all_covers(selected_game.steamgriddb_id, api_key))
-        "hero"  -> List.wrap(SteamGridDB.get_all_heroes(selected_game.steamgriddb_id, api_key))
+        "hero" -> List.wrap(SteamGridDB.get_all_heroes(selected_game.steamgriddb_id, api_key))
       end
       |> Enum.filter(& &1)
       |> Enum.uniq()
 
     {:noreply,
-    assign(socket,
-      show_image_selector: true,
-      image_selector_field: field,
-      image_options: images
-    )}
+     assign(socket,
+       show_image_selector: true,
+       image_selector_field: field,
+       image_options: images
+     )}
   end
 
   @impl true
-  def handle_event("select_image", %{"url" => url, "field" => field}, socket) do
-    key =
-      case field do
-        "cover" -> :cover
-        "hero" -> :hero
-      end
+  def handle_event(
+        "select_image",
+        %{"url" => url, "field" => field},
+        %{assigns: %{game: game, current_scope: current_scope}} = socket
+      ) do
+    {:ok, updated_game} =
+      Game.Command.update(game, current_scope.user, Map.put_new(%{}, field, url))
 
-    {:noreply,
-     socket
-     |> assign(:show_image_selector, false)
-     |> assign(:image_selector_field, nil)
-     |> assign(:image_options, [])
-     |> update(:game, fn game ->
-       Map.put(game, key, url)
-     end)}
+    socket =
+      socket
+      |> assign(:show_image_selector, false)
+      |> assign(:image_selector_field, nil)
+      |> assign(:image_options, [])
+      |> assign(:game, updated_game)
+      |> stream_insert(:game_list, updated_game)
+
+    {:noreply, socket}
   end
 
   @impl true
