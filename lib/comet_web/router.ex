@@ -40,6 +40,10 @@ defmodule CometWeb.Router do
       on_mount: [{CometWeb.UserAuth, :require_authenticated}] do
     end
 
+    scope "/dashboard" do
+      live "/hub", DashboardLive.Hub
+    end
+
     scope "/settings" do
       live "/account", SettingsLive.Account
       live "/profile", SettingsLive.Profile
