@@ -16,7 +16,7 @@ defmodule CometWeb.BrowserLive.Collection do
       >
         <.search_form api_key={@api_key} search_query={@search_query} />
 
-        <.loading_indicator :if={@loading} />
+        <.loading_indicator :if={@loading} loading={@loading} />
 
         <.search_results :if={@search_results} results={@search_results} />
 
@@ -82,6 +82,7 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
+  attr :loading, :boolean, default: false
   defp loading_indicator(assigns) do
     ~H"""
     <div class="flex justify-center items-center py-8">
@@ -91,6 +92,7 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
+  attr :results, :list, required: true
   defp search_results(assigns) do
     ~H"""
     <div class="space-y-4">
@@ -382,7 +384,6 @@ defmodule CometWeb.BrowserLive.Collection do
       image_options: images
     )}
   end
-
 
   @impl true
   def handle_event("select_image", %{"url" => url, "field" => field}, socket) do
