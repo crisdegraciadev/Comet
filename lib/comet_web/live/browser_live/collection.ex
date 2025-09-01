@@ -30,7 +30,7 @@ defmodule CometWeb.BrowserLive.Collection do
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_scope.user |> Comet.Repo.preload(profile: :user)
+    user = Comet.Accounts.get_user_with_profile!(socket.assigns.current_scope.user.id)
     api_key = user.profile.api_key
 
     socket =
