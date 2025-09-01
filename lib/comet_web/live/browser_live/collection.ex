@@ -16,7 +16,7 @@ defmodule CometWeb.BrowserLive.Collection do
       >
         <.search_form api_key={@api_key} search_query={@search_query} />
 
-        <.loading_indicator :if={@loading} />
+        <.loading_indicator :if={@loading} loading={@loading} />
 
         <.search_results :if={@search_results} results={@search_results} />
 
@@ -30,7 +30,7 @@ defmodule CometWeb.BrowserLive.Collection do
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_scope.user |> Comet.Repo.preload(profile: :user)
+    user = Comet.Accounts.get_user_with_profile!(socket.assigns.current_scope.user.id)
     api_key = user.profile.api_key
 
     socket =
@@ -58,7 +58,7 @@ defmodule CometWeb.BrowserLive.Collection do
         <:subtitle>Search for games on SteamGridDB</:subtitle>
       </.header>
 
-      <.form for={%{}} class="flex gap-2" id="search-form" phx-submit="search">
+      <.form :if={@api_key != nil and @api_key != ""} for={%{}} class="flex gap-2" id="search-form" phx-submit="search">
         <.input
           name="query"
           fieldset_class="grow"
@@ -73,15 +73,18 @@ defmodule CometWeb.BrowserLive.Collection do
       </.form>
 
       <div :if={@api_key == nil or @api_key == ""} class="alert alert-warning">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
-        <span>You need to configure your SteamGridDB API key in
-        <.link href={~p"/settings/api_key"} class="link link-primary">Settings</.link>
-        to search for games.</span>
+        <.icon name="hero-exclamation-triangle" class="w-6 h-6 text-white" />
+        <span>
+          You need to configure your SteamGridDB API key in
+          <.link href={~p"/settings/api_key"} class="link link-primary">Settings</.link>
+          to search for games.
+        </span>
       </div>
     </div>
     """
   end
 
+  attr :loading, :boolean, default: false
   defp loading_indicator(assigns) do
     ~H"""
     <div class="flex justify-center items-center py-8">
@@ -91,6 +94,7 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
+  attr :results, :list, required: true
   defp search_results(assigns) do
     ~H"""
     <div class="space-y-4">
@@ -111,7 +115,12 @@ defmodule CometWeb.BrowserLive.Collection do
   attr :id, :string, required: true
   defp game_card(assigns) do
     ~H"""
-    <div id={@id} phx-click="select_game" phx-value-game-id={@game.id} class="cursor-pointer">
+    <div
+      id={@id}
+      phx-click="select_game"
+      phx-value-game={Jason.encode!(@game)}
+      class="cursor-pointer"
+    >
       <div class="rounded-md flex flex-col gap-2 game-cover bg-base-300 relative">
         <div class="absolute top-2 left-2 flex gap-1 flex-col">
           <.badge :if={@game.verified} color="success" size="xs">Verified</.badge>
@@ -159,10 +168,6 @@ defmodule CometWeb.BrowserLive.Collection do
             <.button phx-click="show_add_modal" variant="primary">
               <.icon name="hero-plus" />
               Add to Backlog
-            </.button>
-            <.button :if={@game.steam_id} phx-click="view_on_steam" variant="ghost">
-              <.icon name="hero-arrow-top-right-on-square" />
-              View on Steam
             </.button>
           </div>
         </div>
@@ -277,35 +282,30 @@ defmodule CometWeb.BrowserLive.Collection do
 
   @impl true
   def handle_event("search", %{"query" => query}, socket) do
-    if socket.assigns.api_key && socket.assigns.api_key != "" do
-      socket = assign(socket, :loading, true) |> assign(:search_query, query)
+    socket = assign(socket, :loading, true) |> assign(:search_query, query)
 
-      case SteamGridDB.search_games_with_covers(query, socket.assigns.api_key) do
-        {:ok, results} ->
-          results_with_heroes =
-            Enum.map(results, fn game ->
-              hero_url = SteamGridDB.get_hero(game.id, socket.assigns.api_key) || game.cover_url
-              Map.put(game, :hero, hero_url)
-            end)
+    case SteamGridDB.search_games_with_covers(query, socket.assigns.api_key) do
+      {:ok, results} ->
+        results_with_heroes =
+          Enum.map(results, fn game ->
+            hero_url = SteamGridDB.get_hero(game.id, socket.assigns.api_key) || game.cover_url
+            Map.put(game, :hero, hero_url)
+          end)
 
-          {:noreply,
-           socket
-           |> assign(:search_results, results_with_heroes)
-           |> assign(:loading, false)
-           |> put_flash(:info, "Found #{length(results_with_heroes)} games")}
+        {:noreply,
+         socket
+         |> assign(:search_results, results_with_heroes)
+         |> assign(:loading, false)
+         |> put_flash(:info, "Found #{length(results_with_heroes)} games")}
 
-        {:error, message} ->
-          {:noreply, assign(socket, :loading, false) |> put_flash(:error, message)}
-      end
-    else
-      {:noreply, put_flash(socket, :error, "Please configure your SteamGridDB API key first")}
+      {:error, message} ->
+        {:noreply, assign(socket, :loading, false) |> put_flash(:error, message)}
     end
   end
 
   @impl true
-  def handle_event("select_game", %{"game-id" => game_id}, socket) do
-    game =
-      Enum.find(socket.assigns.search_results, &(&1.id == String.to_integer(game_id)))
+  def handle_event("select_game", %{"game" => game_json}, socket) do
+    {:ok, game} = Jason.decode(game_json, keys: :atoms)
     {:noreply, assign(socket, :selected_game, game)}
   end
 
@@ -322,17 +322,6 @@ defmodule CometWeb.BrowserLive.Collection do
   @impl true
   def handle_event("close_add_modal", _params, socket) do
     {:noreply, assign(socket, :show_add_modal, false)}
-  end
-
-  @impl true
-  def handle_event("view_on_steam", _params, socket) do
-    game = socket.assigns.selected_game
-    steam_url = "https://store.steampowered.com/app/#{game.steam_id}"
-
-    {:noreply,
-     socket
-     |> push_event("open_url", %{url: steam_url})
-     |> assign(:selected_game, nil)}
   end
 
   @impl true
@@ -369,8 +358,8 @@ defmodule CometWeb.BrowserLive.Collection do
 
     images =
       case field do
-        "cover" -> List.wrap(Comet.Services.SteamGridDB.get_all_covers(selected_game.id, api_key))
-        "hero" -> List.wrap(Comet.Services.SteamGridDB.get_all_heroes(selected_game.id, api_key))
+        "cover" -> Comet.Services.SteamGridDB.get_all_covers(selected_game.id, api_key)
+        "hero" -> Comet.Services.SteamGridDB.get_all_heroes(selected_game.id, api_key)
       end
       |> Enum.filter(& &1)
       |> Enum.uniq()
@@ -382,7 +371,6 @@ defmodule CometWeb.BrowserLive.Collection do
       image_options: images
     )}
   end
-
 
   @impl true
   def handle_event("select_image", %{"url" => url, "field" => field}, socket) do

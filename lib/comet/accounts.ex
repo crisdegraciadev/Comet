@@ -255,4 +255,13 @@ defmodule Comet.Accounts do
     |> User.email_changeset(%{"email" => new_email})
     |> Repo.update()
   end
+
+  @doc """
+  Gets the profile based on the user id.
+  """
+  def get_user_with_profile!(user_id) do
+    Repo.get!(User, user_id)
+    |> Repo.preload(profile: :user)
+  end
+
 end
