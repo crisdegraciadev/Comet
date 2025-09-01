@@ -8,11 +8,15 @@ defmodule Comet.Games.Game.Query do
 
   def all(%User{id: user_id}, filter \\ %{}) do
     Game
-    |> where([g], g.user_id == ^user_id)
+    |> for_user(user_id)
     |> with_status(filter["status"])
     |> with_platform(filter["platform"])
     |> search_by(filter["name"])
     |> Repo.all()
+  end
+
+  defp for_user(query, user_id) do
+    where(query, [g], g.user_id == ^user_id)
   end
 
   defp with_status(query, status) when status in ~w(completed in_progress pending) do
@@ -32,7 +36,7 @@ defmodule Comet.Games.Game.Query do
 
   def get!(%User{id: user_id}, id) when is_integer(id) do
     Game
-    |> where([g], g.user_id == ^user_id)
+    |> for_user(user_id)
     |> Repo.get!(id)
   end
 
