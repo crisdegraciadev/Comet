@@ -167,10 +167,6 @@ defmodule CometWeb.BrowserLive.Collection do
               <.icon name="hero-plus" />
               Add to Backlog
             </.button>
-            <.button :if={@game.steam_id} phx-click="view_on_steam" variant="ghost">
-              <.icon name="hero-arrow-top-right-on-square" />
-              View on Steam
-            </.button>
           </div>
         </div>
       </div>
@@ -328,17 +324,6 @@ defmodule CometWeb.BrowserLive.Collection do
   @impl true
   def handle_event("close_add_modal", _params, socket) do
     {:noreply, assign(socket, :show_add_modal, false)}
-  end
-
-  @impl true
-  def handle_event("view_on_steam", _params, socket) do
-    game = socket.assigns.selected_game
-    steam_url = "https://store.steampowered.com/app/#{game.steam_id}"
-
-    {:noreply,
-     socket
-     |> push_event("open_url", %{url: steam_url})
-     |> assign(:selected_game, nil)}
   end
 
   @impl true
