@@ -113,7 +113,12 @@ defmodule CometWeb.BrowserLive.Collection do
   attr :id, :string, required: true
   defp game_card(assigns) do
     ~H"""
-    <div id={@id} phx-click="select_game" phx-value-game-id={@game.id} class="cursor-pointer">
+    <div
+      id={@id}
+      phx-click="select_game"
+      phx-value-game={Jason.encode!(@game)}
+      class="cursor-pointer"
+    >
       <div class="rounded-md flex flex-col gap-2 game-cover bg-base-300 relative">
         <div class="absolute top-2 left-2 flex gap-1 flex-col">
           <.badge :if={@game.verified} color="success" size="xs">Verified</.badge>
@@ -305,9 +310,8 @@ defmodule CometWeb.BrowserLive.Collection do
   end
 
   @impl true
-  def handle_event("select_game", %{"game-id" => game_id}, socket) do
-    game =
-      Enum.find(socket.assigns.search_results, &(&1.id == String.to_integer(game_id)))
+  def handle_event("select_game", %{"game" => game_json}, socket) do
+    {:ok, game} = Jason.decode(game_json, keys: :atoms)
     {:noreply, assign(socket, :selected_game, game)}
   end
 
