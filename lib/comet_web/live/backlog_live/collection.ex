@@ -354,11 +354,21 @@ defmodule CometWeb.BacklogLive.Collection do
   def handle_event("select_image", %{"url" => url, "field" => field}, %{assigns: %{game: game, current_scope: current_scope}} = socket) do
     key = case field do "cover" -> :cover; "hero" -> :hero end
     {:ok, updated_game} = Game.Command.update(game, current_scope.user, %{key => url})
-    {:noreply, socket |> assign(:show_image_selector, false) |> assign(:image_selector_field, nil) |> assign(:image_options, []) |> assign(:game, updated_game) |> stream_insert(:game_list, updated_game)}
+    {:noreply,
+     socket
+     |> assign(:show_image_selector, false)
+     |> assign(:image_selector_field, nil)
+     |> assign(:image_options, [])
+     |> assign(:game, updated_game)
+     |> stream_insert(:game_list, updated_game)}
   end
 
   @impl true
   def handle_event("close_image_selector", _, socket) do
-    {:noreply, socket |> assign(:show_image_selector, false) |> assign(:image_selector_field, nil) |> assign(:image_options, [])}
+    {:noreply,
+     socket
+     |> assign(:show_image_selector, false)
+     |> assign(:image_selector_field, nil)
+     |> assign(:image_options, [])}
   end
 end
