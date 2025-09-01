@@ -58,7 +58,7 @@ defmodule CometWeb.BrowserLive.Collection do
         <:subtitle>Search for games on SteamGridDB</:subtitle>
       </.header>
 
-      <.form for={%{}} class="flex gap-2" id="search-form" phx-submit="search">
+      <.form :if={@api_key != nil and @api_key != ""} for={%{}} class="flex gap-2" id="search-form" phx-submit="search">
         <.input
           name="query"
           fieldset_class="grow"
@@ -74,9 +74,11 @@ defmodule CometWeb.BrowserLive.Collection do
 
       <div :if={@api_key == nil or @api_key == ""} class="alert alert-warning">
         <.icon name="hero-exclamation-triangle" class="w-6 h-6 text-white" />
-        <span>You need to configure your SteamGridDB API key in
-        <.link href={~p"/settings/api_key"} class="link link-primary">Settings</.link>
-        to search for games.</span>
+        <span>
+          You need to configure your SteamGridDB API key in
+          <.link href={~p"/settings/api_key"} class="link link-primary">Settings</.link>
+          to search for games.
+        </span>
       </div>
     </div>
     """
@@ -280,28 +282,24 @@ defmodule CometWeb.BrowserLive.Collection do
 
   @impl true
   def handle_event("search", %{"query" => query}, socket) do
-    if socket.assigns.api_key && socket.assigns.api_key != "" do
-      socket = assign(socket, :loading, true) |> assign(:search_query, query)
+    socket = assign(socket, :loading, true) |> assign(:search_query, query)
 
-      case SteamGridDB.search_games_with_covers(query, socket.assigns.api_key) do
-        {:ok, results} ->
-          results_with_heroes =
-            Enum.map(results, fn game ->
-              hero_url = SteamGridDB.get_hero(game.id, socket.assigns.api_key) || game.cover_url
-              Map.put(game, :hero, hero_url)
-            end)
+    case SteamGridDB.search_games_with_covers(query, socket.assigns.api_key) do
+      {:ok, results} ->
+        results_with_heroes =
+          Enum.map(results, fn game ->
+            hero_url = SteamGridDB.get_hero(game.id, socket.assigns.api_key) || game.cover_url
+            Map.put(game, :hero, hero_url)
+          end)
 
-          {:noreply,
-           socket
-           |> assign(:search_results, results_with_heroes)
-           |> assign(:loading, false)
-           |> put_flash(:info, "Found #{length(results_with_heroes)} games")}
+        {:noreply,
+         socket
+         |> assign(:search_results, results_with_heroes)
+         |> assign(:loading, false)
+         |> put_flash(:info, "Found #{length(results_with_heroes)} games")}
 
-        {:error, message} ->
-          {:noreply, assign(socket, :loading, false) |> put_flash(:error, message)}
-      end
-    else
-      {:noreply, put_flash(socket, :error, "Please configure your SteamGridDB API key first")}
+      {:error, message} ->
+        {:noreply, assign(socket, :loading, false) |> put_flash(:error, message)}
     end
   end
 
