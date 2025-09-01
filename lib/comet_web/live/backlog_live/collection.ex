@@ -66,6 +66,9 @@ defmodule CometWeb.BacklogLive.Collection do
      |> assign(:image_options, [])}
   end
 
+  attr :form, :map, required: true
+  attr :platforms, :list, required: true
+  attr :statuses, :list, required: true
   defp filters(assigns) do
     form = to_form(%{"name" => "", "platform" => "", "status" => ""})
     platforms = platforms() |> Map.values()
@@ -109,7 +112,7 @@ defmodule CometWeb.BacklogLive.Collection do
   end
 
   attr :live_action, :atom, required: true
-  attr :game, Games.Game
+  attr :game, Games.Game, required: true
   defp show_game_modal(assigns) do
     ~H"""
     <.game_modal id={"show-game-modal-#{@game.id}"} game={@game}>
@@ -129,7 +132,7 @@ defmodule CometWeb.BacklogLive.Collection do
     """
   end
 
-  attr :game, Games.Game
+  attr :game, Games.Game, required: true
   defp delete_game_modal(assigns) do
     ~H"""
     <.game_modal id={"delete-game-modal-#{@game.id}"} game={@game}>
@@ -148,8 +151,8 @@ defmodule CometWeb.BacklogLive.Collection do
     """
   end
 
-  attr :game, Games.Game
-  attr :current_scope, :map, default: nil
+  attr :game, Games.Game, required: true
+  attr :current_scope, :map, required: true
   defp edit_game_modal(assigns) do
     changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
     platforms = platforms() |> Map.values()
@@ -245,6 +248,8 @@ defmodule CometWeb.BacklogLive.Collection do
     """
   end
 
+  attr :images, :list, required: true
+  attr :field, :string, required: true
   defp image_selector_modal(assigns) do
     ~H"""
     <dialog id="image-selector" class="modal modal-open shadow-lg bg-transparent">
@@ -261,6 +266,7 @@ defmodule CometWeb.BacklogLive.Collection do
     """
   end
 
+  attr :status, :atom, required: true
   defp status_badge(assigns = %{status: status}) do
     {label, _} = statuses() |> Map.get(status)
     color = case status do
@@ -272,6 +278,7 @@ defmodule CometWeb.BacklogLive.Collection do
     ~H"<.badge color={@color}>{@label}</.badge>"
   end
 
+  attr :platform, :atom, required: true
   defp platform_badge(assigns = %{platform: platform}) do
     {label, _} = platforms() |> Map.get(platform, "unknown")
     assigns = assign(assigns, :label, label)
