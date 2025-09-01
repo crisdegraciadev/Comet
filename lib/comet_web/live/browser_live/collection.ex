@@ -330,8 +330,8 @@ defmodule CometWeb.BrowserLive.Collection do
 
     game_attrs = %{
       name: game_params["name"] || selected_game.name,
-      platform: String.to_existing_atom(game_params["platform"]),
-      status: String.to_existing_atom(game_params["status"]),
+      platform: game_params["platform"],
+      status: game_params["status"],
       cover: game_params["cover"] || selected_game.cover_url,
       hero: game_params["hero"] || selected_game.hero || selected_game.cover_url,
       steamgriddb_id: selected_game.id

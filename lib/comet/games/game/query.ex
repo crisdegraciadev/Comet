@@ -20,7 +20,7 @@ defmodule Comet.Games.Game.Query do
   end
 
   defp with_status(query, status) when status in ~w(completed in_progress pending) do
-    where(query, [g], g.status == ^String.to_existing_atom(status))
+    where(query, [g], g.status == ^status)
   end
   defp with_status(query, _), do: query
 
@@ -30,7 +30,7 @@ defmodule Comet.Games.Game.Query do
   end
 
   defp with_platform(query, platform) when platform in ~w(pc ps1 ps2 ps3 ps4 ps5 psp switch) do
-    where(query, [g], g.platform == ^String.to_existing_atom(platform))
+    where(query, [g], g.platform == ^platform)
   end
   defp with_platform(query, _), do: query
 
