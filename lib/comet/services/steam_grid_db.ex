@@ -42,22 +42,22 @@ defmodule Comet.Services.SteamGridDB do
     url = "#{@base_url}/search/autocomplete/#{URI.encode(query)}"
     alternative_url = "#{@base_url}/games/search?q=#{URI.encode(query)}"
 
-    case Req.get(url, headers: auth_headers(api_key), receive_timeout: 5_000) do
-      {:ok, %Req.Response{status: 200, body: %{"data" => games}}} when is_list(games) ->
+    with {:ok, %Req.Response{status: 200, body: %{"data" => games}}} <- Req.get(url, headers: auth_headers(api_key), receive_timeout: 5_000) do
+      if is_list(games) do
         {:ok, Enum.map(games, &parse_game/1)}
-
-      {:ok, %Req.Response{status: 401}} ->
-        {:error, "Invalid API key"}
-
+      else
+        {:ok, []}
+      end
+    else
+      {:ok, %Req.Response{status: 401}} -> {:error, "Invalid API key"}
       {:ok, %Req.Response{status: _}} ->
         case Req.get(alternative_url, headers: auth_headers(api_key), receive_timeout: 5_000) do
           {:ok, %Req.Response{status: 200, body: %{"data" => games}}} when is_list(games) ->
             {:ok, Enum.map(games, &parse_game/1)}
-          _ -> {:ok, []}
+          _ ->
+            {:ok, []}
         end
-
-      {:error, error} ->
-        {:error, "Network error: #{inspect(error)}"}
+      {:error, error} -> {:error, "Network error: #{inspect(error)}"}
     end
   end
 
