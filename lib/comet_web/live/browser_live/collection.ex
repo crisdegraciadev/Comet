@@ -22,7 +22,16 @@ defmodule CometWeb.BrowserLive.Collection do
 
         <.game_details_modal :if={@selected_game} game={@selected_game} />
         <.add_to_backlog_modal :if={@show_add_modal} game={@selected_game} current_scope={@current_scope} />
-        <.image_selector_modal :if={@show_image_selector} field={@image_selector_field} images={@image_options} />
+
+        <.live_component
+          :if={@selected_game}
+          module={CometWeb.LiveComponents.ImageSelectorComponent}
+          id={"image-selector-#{@selected_game.id}"}
+          game={@selected_game}
+          field={@image_selector_field}
+          api_key={@api_key}
+          show={@show_image_selector}
+        />
       </Layouts.app>
     </div>
     """
@@ -43,7 +52,6 @@ defmodule CometWeb.BrowserLive.Collection do
       |> assign(:show_add_modal, false)
       |> assign(:show_image_selector, false)
       |> assign(:image_selector_field, nil)
-      |> assign(:image_options, [])
 
     {:ok, socket}
   end
@@ -231,23 +239,6 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
-  attr :field, :string, required: true
-  attr :images, :list, required: true
-  defp image_selector_modal(assigns) do
-    ~H"""
-    <dialog id="image-selector-modal" class="modal modal-open">
-      <div class="modal-box max-w-3xl relative">
-        <h3 class="font-bold text-lg mb-4">Select Image for {@field}</h3>
-        <div class="grid grid-cols-6 gap-4">
-          <img :for={img <- @images} src={img} class="cursor-pointer rounded" phx-click="select_image" phx-value-url={img} phx-value-field={@field} />
-        </div>
-        <.button type="button" phx-click="close_image_selector" variant="ghost" class="mt-4">Close</.button>
-      </div>
-      <div class="modal-backdrop" phx-click="close_image_selector"></div>
-    </dialog>
-    """
-  end
-
   defp platforms do
     %{
       pc: {"PC", :pc},
@@ -352,28 +343,16 @@ defmodule CometWeb.BrowserLive.Collection do
   end
 
   @impl true
-  def handle_event("suggest_images", %{"field" => field, "value" => _value}, socket) do
-    selected_game = socket.assigns.selected_game
-    api_key = socket.assigns.api_key
-
-    images =
-      case field do
-        "cover" -> Comet.Services.SteamGridDB.get_all_covers(selected_game.id, api_key)
-        "hero" -> Comet.Services.SteamGridDB.get_all_heroes(selected_game.id, api_key)
-      end
-      |> Enum.filter(& &1)
-      |> Enum.uniq()
-
+  def handle_event("suggest_images", %{"field" => field}, socket) do
     {:noreply,
-    assign(socket,
-      show_image_selector: true,
-      image_selector_field: field,
-      image_options: images
-    )}
+     assign(socket,
+       show_image_selector: true,
+       image_selector_field: field
+     )}
   end
 
   @impl true
-  def handle_event("select_image", %{"url" => url, "field" => field}, socket) do
+  def handle_info({:image_selected, field, url}, socket) do
     key =
       case field do
         "cover" -> :cover_url
@@ -381,17 +360,9 @@ defmodule CometWeb.BrowserLive.Collection do
       end
 
     {:noreply,
-    socket
-    |> assign(:show_image_selector, false)
-    |> assign(:image_selector_field, nil)
-    |> assign(:image_options, [])
-    |> update(:selected_game, fn game ->
-      Map.put(game, key, url)
-    end)}
-  end
-
-  @impl true
-  def handle_event("close_image_selector", _params, socket) do
-    {:noreply, assign(socket, :show_image_selector, false)}
+     socket
+     |> assign(:show_image_selector, false)
+     |> assign(:image_selector_field, nil)
+     |> update(:selected_game, fn game -> Map.put(game, key, url) end)}
   end
 end
