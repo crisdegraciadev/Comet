@@ -110,7 +110,9 @@ defmodule Comet.Services.SteamGridDB do
     case Req.get(url, headers: auth_headers(api_key), receive_timeout: 5_000) do
       {:ok, %Req.Response{status: 200, body: %{"data" => grids}}} when is_list(grids) and length(grids) > 0 ->
         grids
-        |> Enum.map(fn grid -> Map.get(grid, "url", get_fallback_cover_url(game_id)) end)
+        |> Enum.map(&Map.get(&1, "url", get_fallback_cover_url(game_id)))
+        |> Enum.filter(& &1)
+        |> Enum.uniq()
 
       _ ->
         [get_fallback_cover_url(game_id)]
@@ -123,7 +125,9 @@ defmodule Comet.Services.SteamGridDB do
     case Req.get(url, headers: auth_headers(api_key), receive_timeout: 5_000) do
       {:ok, %Req.Response{status: 200, body: %{"data" => heroes}}} when is_list(heroes) and length(heroes) > 0 ->
         heroes
-        |> Enum.map(fn hero -> Map.get(hero, "url", get_fallback_hero_url(game_id)) end)
+        |> Enum.map(&Map.get(&1, "url", get_fallback_hero_url(game_id)))
+        |> Enum.filter(& &1)
+        |> Enum.uniq()
 
       _ ->
         [get_fallback_hero_url(game_id)]

@@ -342,8 +342,8 @@ defmodule CometWeb.BacklogLive.Collection do
     api_key = socket.assigns.current_scope.user.profile.api_key
     images =
       case field do
-        "cover" -> List.wrap(SteamGridDB.get_all_covers(selected_game.steamgriddb_id, api_key))
-        "hero" -> List.wrap(SteamGridDB.get_all_heroes(selected_game.steamgriddb_id, api_key))
+        "cover" -> SteamGridDB.get_all_covers(selected_game.steamgriddb_id, api_key)
+        "hero" -> SteamGridDB.get_all_heroes(selected_game.steamgriddb_id, api_key)
       end
       |> Enum.filter(& &1)
       |> Enum.uniq()

@@ -358,8 +358,8 @@ defmodule CometWeb.BrowserLive.Collection do
 
     images =
       case field do
-        "cover" -> List.wrap(Comet.Services.SteamGridDB.get_all_covers(selected_game.id, api_key))
-        "hero" -> List.wrap(Comet.Services.SteamGridDB.get_all_heroes(selected_game.id, api_key))
+        "cover" -> Comet.Services.SteamGridDB.get_all_covers(selected_game.id, api_key)
+        "hero" -> Comet.Services.SteamGridDB.get_all_heroes(selected_game.id, api_key)
       end
       |> Enum.filter(& &1)
       |> Enum.uniq()
