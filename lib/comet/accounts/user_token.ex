@@ -3,7 +3,6 @@ defmodule Comet.Accounts.UserToken do
   import Ecto.Query
   alias Comet.Accounts.UserToken
 
-  @hash_algorithm :sha256
   @rand_size 32
 
   @session_validity_in_days 14

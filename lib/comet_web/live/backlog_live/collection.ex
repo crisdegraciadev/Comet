@@ -3,7 +3,6 @@ defmodule CometWeb.BacklogLive.Collection do
   alias Comet.Games
   alias Comet.Games.Game
   alias CometWeb.LiveComponents.ImageSelectorComponent
-  alias Comet.Services.SteamGridDB
 
   on_mount {CometWeb.UserAuth, :require_sudo_mode}
 
@@ -41,6 +40,7 @@ defmodule CometWeb.BacklogLive.Collection do
       when live_action != :list do
     user = Comet.Repo.preload(user, :profile)
     game = Game.Query.get!(user, String.to_integer(id))
+
     {:ok,
      socket
      |> stream(:game_list, Game.Query.all(user))
@@ -53,6 +53,7 @@ defmodule CometWeb.BacklogLive.Collection do
   @impl true
   def mount(_params, _session, %{assigns: %{live_action: :list, current_scope: %{user: user}}} = socket) do
     user = Comet.Repo.preload(user, :profile)
+
     {:ok,
      socket
      |> stream(:game_list, Game.Query.all(user))
@@ -61,11 +62,90 @@ defmodule CometWeb.BacklogLive.Collection do
      |> assign(:image_selector_field, nil)}
   end
 
+  @impl true
+  def handle_event("filter", params, %{assigns: %{current_scope: %{user: user}}} = socket) do
+    socket =
+      socket
+      |> assign(:form, to_form(params))
+      |> stream(:game_list, Game.Query.all(user, params), reset: true)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("delete", %{"id" => id}, %{assigns: %{current_scope: %{user: user}}} = socket) do
+    game = Game.Query.get!(user, id)
+    Game.Command.delete!(game)
+
+    socket =
+      socket
+      |> stream_delete(:game_list, game)
+      |> put_flash(:info, "Game deleted")
+      |> push_navigate(to: ~p"/backlog/collection", replace: true)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("update", %{"game" => game_params}, %{assigns: %{game: game, current_scope: current_scope}} = socket) do
+    {:ok, updated_game} = Game.Command.update(game, current_scope.user, game_params)
+
+    socket =
+      socket
+      |> assign(:game, updated_game)
+      |> put_flash(:info, "Game updated!")
+      |> push_navigate(to: ~p"/backlog/collection/#{updated_game.id}", replace: true)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("change_status", %{"status" => status}, %{assigns: %{game: game, current_scope: current_scope}} = socket) do
+    {:ok, updated_game} = Game.Command.update(game, current_scope.user, %{status: status})
+
+    socket =
+      socket
+      |> assign(:game, updated_game)
+      |> stream_insert(:game_list, updated_game)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("suggest_images", %{"field" => field}, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_image_selector, true)
+     |> assign(:image_selector_field, field)}
+  end
+
+  @impl true
+  def handle_event("close_image_selector", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_image_selector, false)
+     |> assign(:image_selector_field, nil)}
+  end
+
+  @impl true
+  def handle_info({:image_selected, field, url}, socket) do
+    key = if field == "cover", do: :cover, else: :hero
+    {:ok, updated_game} = Game.Command.update(socket.assigns.game, socket.assigns.current_scope.user, %{key => url})
+
+    {:noreply,
+     socket
+     |> assign(:show_image_selector, false)
+     |> assign(:image_selector_field, nil)
+     |> assign(:game, updated_game)
+     |> stream_insert(:game_list, updated_game)}
+  end
+
   defp filters(assigns) do
     form = to_form(%{"name" => "", "platform" => "", "status" => ""})
     platforms = platforms() |> Map.values()
     statuses = statuses() |> Map.values()
     assigns = assign(assigns, %{form: form, platforms: platforms, statuses: statuses})
+
     ~H"""
     <.form class="flex gap-2" id="filter-form" phx-change="filter" for={@form}>
       <.input field={@form[:platform]} fieldset_class="w-1/8" type="select" options={@platforms} prompt="Platform" />
@@ -275,64 +355,5 @@ defmodule CometWeb.BacklogLive.Collection do
       in_progress: {"In Progress", :in_progress},
       pending: {"Pending", :pending}
     }
-  end
-
-  @impl true
-  def handle_event("filter", params, %{assigns: %{current_scope: %{user: user}}} = socket) do
-    socket = socket
-    |> assign(:form, to_form(params))
-    |> stream(:game_list, Game.Query.all(user, params), reset: true)
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("delete", %{"id" => id}, %{assigns: %{current_scope: %{user: user}}} = socket) do
-    game = Game.Query.get!(user, id)
-    Game.Command.delete!(game)
-    socket = socket |> stream_delete(:game_list, game) |> put_flash(:info, "Game deleted") |> push_navigate(to: ~p"/backlog/collection", replace: true)
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("update", %{"game" => game_params}, %{assigns: %{game: game, current_scope: current_scope}} = socket) do
-    {:ok, updated_game} = Game.Command.update(game, current_scope.user, game_params)
-    socket = socket |> assign(:game, updated_game) |> put_flash(:info, "Game updated!") |> push_navigate(to: ~p"/backlog/collection/#{updated_game.id}", replace: true)
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("change_status", %{"status" => status}, %{assigns: %{game: game, current_scope: current_scope}} = socket) do
-    {:ok, updated_game} = Game.Command.update(game, current_scope.user, %{status: status})
-    socket = socket |> assign(:game, updated_game) |> stream_insert(:game_list, updated_game)
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("suggest_images", %{"field" => field}, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_image_selector, true)
-     |> assign(:image_selector_field, field)}
-  end
-
-  @impl true
-  def handle_info({:image_selected, field, url}, socket) do
-    key = if field == "cover", do: :cover, else: :hero
-    {:ok, updated_game} = Game.Command.update(socket.assigns.game, socket.assigns.current_scope.user, %{key => url})
-
-    {:noreply,
-     socket
-     |> assign(:show_image_selector, false)
-     |> assign(:image_selector_field, nil)
-     |> assign(:game, updated_game)
-     |> stream_insert(:game_list, updated_game)}
-  end
-
-  @impl true
-  def handle_event("close_image_selector", _, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_image_selector, false)
-     |> assign(:image_selector_field, nil)}
   end
 end

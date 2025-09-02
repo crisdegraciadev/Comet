@@ -103,17 +103,6 @@ defmodule CometWeb.BrowserLive.Collection do
   defp to_atom(atom, _default) when is_atom(atom), do: atom
   defp to_atom(_, default), do: default
 
-  defp pad(n) when n < 10, do: "0#{n}"
-  defp pad(n), do: "#{n}"
-
-  defp format_release_date(nil), do: nil
-  defp format_release_date(timestamp) do
-    timestamp
-    |> DateTime.from_unix!()
-    |> DateTime.to_date()
-    |> then(&"#{pad(&1.day)}/#{pad(&1.month)}/#{&1.year}")
-  end
-
   attr :field, :string, required: true
   attr :game_id, :any, required: true
   defp image_edit_button(assigns) do
