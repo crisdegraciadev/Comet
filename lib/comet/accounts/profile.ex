@@ -15,7 +15,7 @@ defmodule Comet.Accounts.Profile do
   end
 
   @doc false
-  def changeset(profile, attrs, user_scope, opts \\ []) do
+  def changeset(profile, attrs, user_scope, _opts \\ []) do
     profile
     |> cast(attrs, [:username, :name, :surname, :api_key])
     |> unique_constraint(:user_id)

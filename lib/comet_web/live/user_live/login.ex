@@ -1,8 +1,6 @@
 defmodule CometWeb.UserLive.Login do
   use CometWeb, :live_view
 
-  alias Comet.Accounts
-
   @impl true
   def render(assigns) do
     ~H"""

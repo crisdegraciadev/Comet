@@ -159,7 +159,7 @@ defmodule CometWeb.Layouts do
 
             <ul class="menu bg-base-200 text-base-content min-h-full w-full">
               <li><.link href={~p"/"}><.icon name="hero-home" />Home</.link></li>
-              <li><.link href={~p"/"}><.icon name="hero-magnifying-glass" />Browser</.link></li>
+              <li><.link href={~p"/browser/collection"}><.icon name="hero-magnifying-glass" />Browser</.link></li>
               <li>
                 <.link href={~p"/backlog/collection"}>
                   <.icon name="hero-rectangle-stack" />Backlog
@@ -248,6 +248,13 @@ defmodule CometWeb.Layouts do
     {"Backlog",
      [
        {"Collection", ~p"/backlog/collection"}
+     ]}
+  end
+
+  defp topbar_module("browser") do
+    {"Browser",
+     [
+       {"Collection", ~p"/browser/collection"}
      ]}
   end
 end
