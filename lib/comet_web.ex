@@ -87,6 +87,7 @@ defmodule CometWeb do
 
       # Core UI components
       import CometWeb.CoreComponents
+      import CometWeb.CustomComponents
       import CometWeb.InputComponents
 
       # Common modules used in templates
