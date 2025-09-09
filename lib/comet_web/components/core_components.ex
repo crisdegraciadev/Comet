@@ -75,7 +75,7 @@ defmodule CometWeb.CoreComponents do
     assigns =
       assigns
       |> assign(:class, [
-        "btn",
+        "btn shrink-1",
         assigns[:variant] && "btn-#{assigns[:variant]}",
         assigns[:size] && "btn-#{assigns[:size]}",
         assigns[:icon] && "btn-#{assigns[:icon]}",
