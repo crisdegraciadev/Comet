@@ -195,7 +195,7 @@ defmodule CometWeb.BrowserLive.Collection do
       phx-value-game={Jason.encode!(@game)}
       class="cursor-pointer"
     >
-      <div class="rounded-md flex flex-col gap-2 game-cover bg-base-300 relative">
+      <div class="rounded-md flex flex-col gap-2 game-cover-shadow bg-base-300 relative">
         <div class="absolute top-2 left-2 flex gap-1 flex-col">
           <.badge :if={@game.verified} color="success" size="xs">Verified</.badge>
           <.badge :if={@game.steam_id} color="info" size="xs">Steam</.badge>
@@ -244,43 +244,43 @@ defmodule CometWeb.BrowserLive.Collection do
     ~H"<.badge color='neutral'>{@label}</.badge>"
   end
 
-  attr :id, :string, required: true
-  attr :game, :map, required: true
-  slot :inner_block
-  defp game_modal(assigns) do
-    ~H"""
-    <dialog id={@id} class="modal modal-open shadow-lg bg-transparent">
-      <div class="game-modal modal-box w-1/2 max-w-[1920px] p-0 bg-cover bg-center relative" style={"background-image: url(#{@game.hero})"}>
-        <.image_edit_button field="hero" game_id={@game.id} />
-        <div class="card bg-base-100/75 w-fit">
-          <div class="card-body">
-            <div class="flex gap-8">
-              <div class="relative w-[300px]">
-                <img class="rounded-md game-cover w-full" src={@game.cover} />
-                <.image_edit_button field="cover" game_id={@game.id} />
-              </div>
-              <div class="flex flex-col justify-between">
-                <div class="flex flex-col gap-2 h-full">
-                  <div class="flex flex-col gap-4">
-                    <h1 class="limited-multiline-text font-semibold text-3xl">{@game.name}</h1>
-                    <div class="flex gap-2 mb-2">
-                      <.status_badge status={@game.status} />
-                      <.platform_badge platform={@game.platform} />
-                    </div>
-                  </div>
-                  <div class="h-full">
-                    {render_slot(@inner_block)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <.link class="modal-backdrop" href={~p"/browser/collection"}></.link>
-    </dialog>
-    """
-  end
+  # attr :id, :string, required: true
+  # attr :game, :map, required: true
+  # slot :inner_block
+  # defp game_modal(assigns) do
+  #   ~H"""
+  #   <dialog id={@id} class="modal modal-open shadow-lg bg-transparent">
+  #     <div class="game-modal modal-box w-1/2 max-w-[1920px] p-0 bg-cover bg-center relative" style={"background-image: url(#{@game.hero})"}>
+  #       <.image_edit_button field="hero" game_id={@game.id} />
+  #       <div class="card bg-base-100/75 w-fit">
+  #         <div class="card-body">
+  #           <div class="flex gap-8">
+  #             <div class="relative w-[300px]">
+  #               <img class="rounded-md game-cover-shadow w-full" src={@game.cover} />
+  #               <.image_edit_button field="cover" game_id={@game.id} />
+  #             </div>
+  #             <div class="flex flex-col justify-between">
+  #               <div class="flex flex-col gap-2 h-full">
+  #                 <div class="flex flex-col gap-4">
+  #                   <h1 class="limited-multiline-text font-semibold text-3xl">{@game.name}</h1>
+  #                   <div class="flex gap-2 mb-2">
+  #                     <.status_badge status={@game.status} />
+  #                     <.platform_badge platform={@game.platform} />
+  #                   </div>
+  #                 </div>
+  #                 <div class="h-full">
+  #                   {render_slot(@inner_block)}
+  #                 </div>
+  #               </div>
+  #             </div>
+  #           </div>
+  #         </div>
+  #       </div>
+  #     </div>
+  #     <.link class="modal-backdrop" href={~p"/browser/collection"}></.link>
+  #   </dialog>
+  #   """
+  # end
 
   attr :game, :map, required: true
   attr :current_scope, :map, required: true
