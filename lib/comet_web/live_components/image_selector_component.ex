@@ -1,74 +1,99 @@
 defmodule CometWeb.LiveComponents.ImageSelectorComponent do
   use CometWeb, :live_component
+
   alias Comet.Services.SteamGridDB
+  alias Comet.Games.Game
 
   attr :game, :map, required: true
-  attr :field, :string, required: true
-  attr :api_key, :string, required: true
-  attr :show, :boolean, default: false
+  attr :current_scope, :map, required: true
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, images: [])}
+    {:ok, socket}
   end
 
   @impl true
-  def update(assigns, socket) do
-    images =
-      if assigns.show do
-        load_images(assigns.game, assigns.field, assigns.api_key)
-      else
-        []
-      end
+  def update(%{current_scope: current_scope, game: game}, socket) do
+    assigns = %{
+      covers: SteamGridDB.get_all_covers(game.steamgriddb_id, current_scope.user.profile.api_key),
+      heroes: SteamGridDB.get_all_heroes(game.steamgriddb_id, current_scope.user.profile.api_key),
+      current_scope: current_scope,
+      game: game,
+      checked: :cover
+    }
 
-    {:ok, assign(socket, assigns |> Map.put(:images, images))}
+    {:ok, assign(socket, assigns)}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="image-selector-component">
-      <dialog :if={@show} id="image-selector-modal" class="modal modal-open shadow-lg bg-transparent">
-        <div
-          class="modal-box w-1/2 max-w-[1280px]"
-          phx-click-away="close"
-          phx-target={@myself}
-        >
-          <h2 class="font-semibold mb-4">Select an image for {@field}</h2>
-          <div class="grid grid-cols-4 gap-4">
-            <img :for={img <- @images} src={img} class="cursor-pointer rounded"
-              phx-click="select_image"
-              phx-value-url={img}
-              phx-value-field={@field}
-              phx-target={@myself} />
+    <div id={"images-selector-#{@game.id}"}>
+      <.game_modal id={"change-cover-game-modal-#{@game.id}"} game={@game}>
+        <div class="tabs tabs-border">
+          <input
+            type="radio"
+            name="my_tabs_2"
+            class="tab"
+            aria-label="Covers"
+            checked={@checked == :cover}
+          />
+          <div class="tab-content border border-base-content/10 bg-base-200 p-2 rounded-box">
+            <div class="grid grid-cols-4 gap-4 overflow-y-scroll max-h-[500px] pr-2">
+              <img
+                :for={img <- @covers}
+                src={img}
+                class="cursor-pointer rounded"
+                phx-click="update_image"
+                phx-value-url={img}
+                phx-value-field={:cover}
+                phx-target={@myself}
+              />
+            </div>
           </div>
-          <div class="mt-4 flex justify-end">
-            <.button phx-click="close" phx-target={@myself}>Close</.button>
+
+          <input
+            type="radio"
+            name="my_tabs_2"
+            class="tab"
+            aria-label="Heros"
+            checked={@checked == :hero}
+          />
+          <div class="tab-content border border-base-content/10 bg-base-200 p-2 rounded-box">
+            <div class="grid grid-cols-2 gap-4 overflow-y-scroll max-h-[500px] pr-2">
+              <img
+                :for={img <- @heroes}
+                src={img}
+                class="cursor-pointer rounded"
+                phx-click="update_image"
+                phx-value-url={img}
+                phx-value-field={:hero}
+                phx-target={@myself}
+              />
+            </div>
           </div>
         </div>
-      </dialog>
+
+        <div class="mt-4 flex justify-end">
+          <.button variant="error" href={~p"/backlog/collection/#{@game}/edit"}>Back</.button>
+        </div>
+      </.game_modal>
     </div>
     """
   end
 
   @impl true
-  def handle_event("select_image", %{"url" => url, "field" => field}, socket) do
-    send(self(), {:image_selected, field, url})
-    {:noreply, assign(socket, show: false)}
-  end
+  def handle_event(
+        "update_image",
+        %{"url" => url, "field" => field},
+        %{assigns: %{game: game, current_scope: current_scope}} = socket
+      ) do
+    {:ok, updated_game} = Game.Command.update(game, current_scope.user, Map.put(%{}, field, url))
 
-  @impl true
-  def handle_event("close", _params, socket) do
-    {:noreply, assign(socket, show: false)}
-  end
+    socket = socket |> assign(:game, updated_game) |> assign(:checked, String.to_atom(field))
 
-  defp load_images(game, "cover", api_key) do
-    game_id = Map.get(game, :steamgriddb_id, game.id)
-    SteamGridDB.get_all_covers(game_id, api_key) |> Enum.uniq()
-  end
+    send(self(), {:updated_image, updated_game})
 
-  defp load_images(game, "hero", api_key) do
-    game_id = Map.get(game, :steamgriddb_id, game.id)
-    SteamGridDB.get_all_heroes(game_id, api_key) |> Enum.uniq()
+    {:noreply, socket}
   end
 end
