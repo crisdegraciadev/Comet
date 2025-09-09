@@ -51,6 +51,7 @@ defmodule CometWeb.Router do
       live "/collection/:id", BacklogLive.Collection, :show
       live "/collection/:id/delete", BacklogLive.Collection, :delete
       live "/collection/:id/edit", BacklogLive.Collection, :edit
+      live "/collection/:id/images/edit", BacklogLive.Collection, :images_edit
     end
 
     scope "/browser" do

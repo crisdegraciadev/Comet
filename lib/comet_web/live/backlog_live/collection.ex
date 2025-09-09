@@ -21,45 +21,50 @@ defmodule CometWeb.BacklogLive.Collection do
       <.delete_game_modal :if={@live_action == :delete} game={@game} />
       <.edit_game_modal :if={@live_action == :edit} game={@game} current_scope={@current_scope} />
 
-      <%= if @show_image_selector do %>
-        <.live_component
-          module={ImageSelectorComponent}
-          id={"image-selector-#{@game.id}"}
-          game={@game}
-          field={@image_selector_field}
-          api_key={@current_scope.user.profile.api_key}
-          show={@show_image_selector}
-        />
-      <% end %>
+      <.live_component
+        :if={@live_action == :images_edit}
+        module={ImageSelectorComponent}
+        id={"images-selector-#{@game.id}"}
+        game={@game}
+        current_scope={@current_scope}
+      />
     </Layouts.app>
     """
   end
 
   @impl true
-  def mount(%{"id" => id}, _session, %{assigns: %{live_action: live_action, current_scope: %{user: user}}} = socket)
+  def mount(
+        %{"id" => id},
+        _session,
+        %{assigns: %{live_action: live_action, current_scope: %{user: user}}} = socket
+      )
       when live_action != :list do
     user = Comet.Repo.preload(user, :profile)
     game = Game.Query.get!(user, String.to_integer(id))
 
-    {:ok,
-     socket
-     |> stream(:game_list, Game.Query.all(user))
-     |> assign(:current_scope, %{user: user})
-     |> assign(:game, game)
-     |> assign(:show_image_selector, false)
-     |> assign(:image_selector_field, nil)}
+    socket =
+      socket
+      |> stream(:game_list, Game.Query.all(user))
+      |> assign(:current_scope, %{user: user})
+      |> assign(:game, game)
+
+    {:ok, socket}
   end
 
   @impl true
-  def mount(_params, _session, %{assigns: %{live_action: :list, current_scope: %{user: user}}} = socket) do
+  def mount(
+        _params,
+        _session,
+        %{assigns: %{live_action: :list, current_scope: %{user: user}}} = socket
+      ) do
     user = Comet.Repo.preload(user, :profile)
 
-    {:ok,
-     socket
-     |> stream(:game_list, Game.Query.all(user))
-     |> assign(:current_scope, %{user: user})
-     |> assign(:show_image_selector, false)
-     |> assign(:image_selector_field, nil)}
+    socket =
+      socket
+      |> stream(:game_list, Game.Query.all(user))
+      |> assign(:current_scope, %{user: user})
+
+    {:ok, socket}
   end
 
   @impl true
@@ -87,7 +92,11 @@ defmodule CometWeb.BacklogLive.Collection do
   end
 
   @impl true
-  def handle_event("update", %{"game" => game_params}, %{assigns: %{game: game, current_scope: current_scope}} = socket) do
+  def handle_event(
+        "update",
+        %{"game" => game_params},
+        %{assigns: %{game: game, current_scope: current_scope}} = socket
+      ) do
     {:ok, updated_game} = Game.Command.update(game, current_scope.user, game_params)
 
     socket =
@@ -100,7 +109,11 @@ defmodule CometWeb.BacklogLive.Collection do
   end
 
   @impl true
-  def handle_event("change_status", %{"status" => status}, %{assigns: %{game: game, current_scope: current_scope}} = socket) do
+  def handle_event(
+        "change_status",
+        %{"status" => status},
+        %{assigns: %{game: game, current_scope: current_scope}} = socket
+      ) do
     {:ok, updated_game} = Game.Command.update(game, current_scope.user, %{status: status})
 
     socket =
@@ -112,32 +125,8 @@ defmodule CometWeb.BacklogLive.Collection do
   end
 
   @impl true
-  def handle_event("suggest_images", %{"field" => field}, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_image_selector, true)
-     |> assign(:image_selector_field, field)}
-  end
-
-  @impl true
-  def handle_event("close_image_selector", _, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_image_selector, false)
-     |> assign(:image_selector_field, nil)}
-  end
-
-  @impl true
-  def handle_info({:image_selected, field, url}, socket) do
-    key = if field == "cover", do: :cover, else: :hero
-    {:ok, updated_game} = Game.Command.update(socket.assigns.game, socket.assigns.current_scope.user, %{key => url})
-
-    {:noreply,
-     socket
-     |> assign(:show_image_selector, false)
-     |> assign(:image_selector_field, nil)
-     |> assign(:game, updated_game)
-     |> stream_insert(:game_list, updated_game)}
+  def handle_info({:updated_image, updated_game}, socket) do
+    {:noreply, socket |> stream_insert(:game_list, updated_game)}
   end
 
   defp filters(assigns) do
@@ -148,14 +137,27 @@ defmodule CometWeb.BacklogLive.Collection do
 
     ~H"""
     <.form class="flex gap-2" id="filter-form" phx-change="filter" for={@form}>
-      <.input field={@form[:platform]} fieldset_class="w-1/8" type="select" options={@platforms} prompt="Platform" />
-      <.input field={@form[:status]} fieldset_class="w-1/8" type="select" options={@statuses} prompt="Status" />
+      <.input
+        field={@form[:platform]}
+        fieldset_class="w-1/8"
+        type="select"
+        options={@platforms}
+        prompt="Platform"
+      />
+      <.input
+        field={@form[:status]}
+        fieldset_class="w-1/8"
+        type="select"
+        options={@statuses}
+        prompt="Status"
+      />
       <.input field={@form[:name]} fieldset_class="grow" placeholder="Search" autocomplete="off" />
     </.form>
     """
   end
 
   attr :streams, :any, required: true
+
   defp game_list(assigns) do
     ~H"""
     <div class="grid grid-cols-8 gap-4" id="games" phx-update="stream">
@@ -166,10 +168,11 @@ defmodule CometWeb.BacklogLive.Collection do
 
   attr :id, :string, required: true
   attr :game, Games.Game
+
   defp game_card(assigns) do
     ~H"""
     <.link id={@id} href={~p"/backlog/collection/#{@game}"}>
-      <div class="rounded-md flex flex-col gap-2 game-cover bg-base-300 relative">
+      <div class="rounded-md flex flex-col gap-2 game-cover-shadow bg-base-300 relative">
         <div class="absolute top-2 left-2 flex gap-1 flex-col">
           <.status_badge status={@game.status} />
           <.platform_badge platform={@game.platform} />
@@ -183,19 +186,35 @@ defmodule CometWeb.BacklogLive.Collection do
 
   attr :live_action, :atom, required: true
   attr :game, Games.Game
+
   defp show_game_modal(assigns) do
     ~H"""
     <.game_modal id={"show-game-modal-#{@game.id}"} game={@game}>
-      <div class="flex flex-col gap-4">
-        <div class="flex flex-col gap-2">
-          <p class="font-semibold text-md">Game Status</p>
-          <.button phx-click="change_status" phx-value-status="pending" class="hover:btn-info focus:btn-info" variant={@game.status == :pending && "info"} soft={@game.status != :pending}>Pending</.button>
-          <.button phx-click="change_status" phx-value-status="in_progress" class="hover:btn-warning focus:btn-warning" variant={@game.status == :in_progress && "warning"} soft={@game.status != :in_progress}>In Progress</.button>
-          <.button phx-click="change_status" phx-value-status="completed" class="hover:btn-success focus:btn-success" variant={@game.status == :completed && "success"} soft={@game.status != :completed}>Completed</.button>
+      <:actions>
+        <.button href={~p"/backlog/collection/#{@game}/edit"}>
+          <.icon name="hero-pencil" /> Edit
+        </.button>
+        <.button variant="error" href={~p"/backlog/collection/#{@game}/delete"}>
+          <.icon name="hero-trash" /> Delete
+        </.button>
+      </:actions>
+
+      <div class="flex flex-col gap-2 rounded-box border border-base-content/10 bg-base-200  p-4">
+        <div class="grid grid-cols-2">
+          <span><.icon name="hero-circle-stack" class="mr-2 size-4" /> Status</span>
+          <.status_badge status={@game.status} />
         </div>
-        <div class="flex flex-col gap-2">
-          <.button href={~p"/backlog/collection/#{@game}/edit"}>Edit</.button>
-          <.button variant="error" href={~p"/backlog/collection/#{@game}/delete"}>Delete</.button>
+        <div class="grid grid-cols-2">
+          <span><.icon name="hero-computer-desktop" class="mr-2 size-4" />Platform</span>
+          <.platform_badge platform={@game.platform} />
+        </div>
+        <div class="grid grid-cols-2">
+          <span><.icon name="hero-calendar" class="mr-2 size-4" />Purchased</span>
+          <span>15 de Enero, 2018</span>
+        </div>
+        <div class="grid grid-cols-2">
+          <span><.icon name="hero-calendar-days" class="mr-2 size-4" />Completition</span>
+          <span>10 de Junio, 2020</span>
         </div>
       </div>
     </.game_modal>
@@ -203,19 +222,21 @@ defmodule CometWeb.BacklogLive.Collection do
   end
 
   attr :game, Games.Game
+
   defp delete_game_modal(assigns) do
     ~H"""
     <.game_modal id={"delete-game-modal-#{@game.id}"} game={@game}>
-      <div class="flex flex-col justify-between h-full max-w-sm">
-        <div class="flex flex-col gap-2">
-          <p>You are about to <span class="font-bold">delete</span> the following game from your collection.</p>
-          <p><span class="font-bold">This action can't be undone </span> and you will lose all your data related with the game.</p>
-          <p>Confirm the operation or cancel it.</p>
-        </div>
-        <div class="flex flex-col gap-2">
-          <.button variant="error" phx-click="delete" phx-value-id={@game.id}>Delete</.button>
-          <.button href={~p"/backlog/collection/#{@game.id}"}> Cancel</.button>
-        </div>
+      <div class="flex flex-col gap-2">
+        <p>
+          You are about to <span class="font-bold">delete</span>
+          the following game from your collection.
+          <span class="font-bold">This action can't be undone </span>
+          and you will lose all your data related with the game.
+        </p>
+      </div>
+      <div class="flex justify-end w-full gap-2">
+        <.button variant="error" phx-click="delete" phx-value-id={@game.id}>Confirm</.button>
+        <.button href={~p"/backlog/collection/#{@game.id}"}>Cancel</.button>
       </div>
     </.game_modal>
     """
@@ -223,6 +244,7 @@ defmodule CometWeb.BacklogLive.Collection do
 
   attr :game, Games.Game
   attr :current_scope, :map, required: true
+
   defp edit_game_modal(assigns) do
     changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
     platforms = platforms() |> Map.values()
@@ -236,104 +258,89 @@ defmodule CometWeb.BacklogLive.Collection do
 
     ~H"""
     <.game_modal id={"edit-game-modal-#{@game.id}"} game={@game}>
-      <.form class="flex flex-col h-full justify-between" id={"edit-game-form-#{@game.id}"} phx-submit="update" for={@form}>
-        <div>
-          <.input field={@form[:name]} label="Name" value={@game.name} autocomplete="off" />
-          <div class="flex gap-2">
-            <.input field={@form[:platform]} type="select" label="Platform" options={@platforms} value={@game.platform} fieldset_class="grow" />
-            <.input field={@form[:status]} type="select" label="Status" options={@statuses} value={@game.status} fieldset_class="grow" />
-          </div>
-          <div class="flex flex-col gap-1 relative">
-            <.input field={@form[:cover]} label="Cover URL" placeholder="Cover URL" value={@game.cover} autocomplete="off" />
-          </div>
-          <div class="flex flex-col gap-1 relative">
-            <.input field={@form[:hero]} label="Hero URL" placeholder="Hero URL" value={@game.hero} autocomplete="off" />
-          </div>
+      <:actions>
+        <.button href={~p"/backlog/collection/#{@game.id}/images/edit"}>
+          <.icon name="hero-photo" /> Images
+        </.button>
+      </:actions>
+
+      <.form
+        class="flex flex-col h-full justify-between"
+        id={"edit-game-form-#{@game.id}"}
+        phx-submit="update"
+        for={@form}
+      >
+        <.input field={@form[:name]} label="Name" value={@game.name} autocomplete="off" />
+
+        <div class="flex gap-2">
+          <.input
+            field={@form[:platform]}
+            type="select"
+            label="Platform"
+            options={@platforms}
+            value={@game.platform}
+            fieldset_class="grow"
+          />
+          <.input
+            field={@form[:status]}
+            type="select"
+            label="Status"
+            options={@statuses}
+            value={@game.status}
+            fieldset_class="grow"
+          />
         </div>
-        <div class="flex flex-col gap-2 mt-4">
-          <.button variant="primary" type="submit" phx-disable-with="Saving...">Save</.button>
-          <.button href={~p"/backlog/collection/#{@game.id}"}> Cancel</.button>
+        <div class="flex gap-1 relative">
+          <.input
+            field={@form[:cover]}
+            label="Cover URL"
+            placeholder="Cover URL"
+            value={@game.cover}
+            autocomplete="off"
+          />
+        </div>
+        <div class="flex flex-col gap-1 relative">
+          <.input
+            field={@form[:hero]}
+            label="Hero URL"
+            placeholder="Hero URL"
+            value={@game.hero}
+            autocomplete="off"
+          />
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <.button type="submit" phx-disable-with="Saving...">Save</.button>
+          <.button variant="error" href={~p"/backlog/collection/#{@game.id}"}> Cancel</.button>
         </div>
       </.form>
     </.game_modal>
     """
   end
 
-  attr :id, :string, required: true
-  attr :game, Game, required: true
-  slot :inner_block
-  defp game_modal(assigns) do
-    ~H"""
-    <dialog id={@id} class="modal modal-open shadow-lg bg-transparent">
-      <div class="game-modal modal-box w-1/2 max-w-[1920px] p-0 bg-cover bg-center relative" style={"background-image: url(#{@game.hero})"}>
-        <button
-          type="button"
-          phx-click="suggest_images"
-          phx-value-field="hero"
-          phx-value-id={@game.id}
-          class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center z-50 transition-colors duration-300"
-          style="background-color: oklch(58% 0.233 277.117 / 0.5);"
-          onmouseover="this.style.backgroundColor='oklch(58% 0.233 277.117 / 0.9)';"
-          onmouseout="this.style.backgroundColor='oklch(58% 0.233 277.117 / 0.5)';"
-        >
-          <.icon name="hero-pencil" class="w-6 h-6 text-white" />
-        </button>
-        <div class="card bg-base-100/75 w-fit">
-          <div class="card-body">
-            <div class="flex gap-8">
-              <div class="relative w-[300px]">
-                <img class="rounded-md game-cover w-full" src={@game.cover} />
-                <button
-                  type="button"
-                  phx-click="suggest_images"
-                  phx-value-field="cover"
-                  phx-value-id={@game.id}
-                  class="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center z-50 transition-colors duration-300"
-                  style="background-color: oklch(58% 0.233 277.117 / 0.5);"
-                  onmouseover="this.style.backgroundColor='oklch(58% 0.233 277.117 / 0.9)';"
-                  onmouseout="this.style.backgroundColor='oklch(58% 0.233 277.117 / 0.5)';"
-                >
-                  <.icon name="hero-pencil" class="w-6 h-6 text-white" />
-                </button>
-              </div>
-              <div class="flex flex-col justify-between">
-                <div class="flex flex-col gap-2 h-full">
-                  <div class="flex flex-col gap-4">
-                    <h1 class="limited-multiline-text font-semibold text-3xl">{@game.name}</h1>
-                    <div class="flex gap-2 mb-2">
-                      <.status_badge status={@game.status} />
-                      <.platform_badge platform={@game.platform} />
-                    </div>
-                  </div>
-                  <div class="h-full">
-                    {render_slot(@inner_block)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <.link class="modal-backdrop" href={~p"/backlog/collection"}></.link>
-    </dialog>
-    """
-  end
-
   defp status_badge(assigns = %{status: status}) do
     {label, _} = statuses() |> Map.get(status)
-    color = case status do
-      :completed -> "success"
-      :in_progress -> "warning"
-      :pending -> "info"
-    end
+
+    color =
+      case status do
+        :completed -> "success"
+        :in_progress -> "warning"
+        :pending -> "info"
+      end
+
     assigns = assign(assigns, %{label: label, color: color})
-    ~H"<.badge color={@color}>{@label}</.badge>"
+
+    ~H"""
+    <.badge color={@color}>{@label}</.badge>
+    """
   end
 
   defp platform_badge(assigns = %{platform: platform}) do
     {label, _} = platforms() |> Map.get(platform, "unknown")
     assigns = assign(assigns, :label, label)
-    ~H"<.badge color='neutral'>{@label}</.badge>"
+
+    ~H"""
+    <.badge color="neutral">{@label}</.badge>
+    """
   end
 
   defp platforms() do
