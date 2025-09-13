@@ -160,7 +160,7 @@ defmodule CometWeb.BacklogLive.Collection do
 
   defp game_list(assigns) do
     ~H"""
-    <div class="grid grid-cols-8 gap-4" id="games" phx-update="stream">
+    <div class="grid grid-cols-10 gap-4" id="games" phx-update="stream">
       <.game_card :for={{dom_id, game} <- @streams.game_list} id={dom_id} game={game} />
     </div>
     """
