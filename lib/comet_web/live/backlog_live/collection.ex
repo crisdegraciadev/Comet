@@ -1,7 +1,9 @@
 defmodule CometWeb.BacklogLive.Collection do
   use CometWeb, :live_view
+
   alias Comet.Games
   alias Comet.Games.Game
+  alias Comet.Services.Constants
   alias CometWeb.LiveComponents.ImageSelectorComponent
 
   on_mount {CometWeb.UserAuth, :require_sudo_mode}
@@ -17,7 +19,7 @@ defmodule CometWeb.BacklogLive.Collection do
       <.filters />
       <.game_list streams={@streams} />
 
-      <.show_game_modal :if={@live_action == :show} live_action={@live_action} game={@game} />
+      <.show_game_modal :if={@live_action == :show} game={@game} />
       <.delete_game_modal :if={@live_action == :delete} game={@game} />
       <.edit_game_modal :if={@live_action == :edit} game={@game} current_scope={@current_scope} />
 
@@ -131,9 +133,13 @@ defmodule CometWeb.BacklogLive.Collection do
 
   defp filters(assigns) do
     form = to_form(%{"name" => "", "platform" => "", "status" => ""})
-    platforms = platforms() |> Map.values()
-    statuses = statuses() |> Map.values()
-    assigns = assign(assigns, %{form: form, platforms: platforms, statuses: statuses})
+
+    assigns =
+      assign(assigns, %{
+        form: form,
+        platforms: Constants.platforms(:values),
+        statuses: Constants.statuses(:values)
+      })
 
     ~H"""
     <.form class="flex gap-2" id="filter-form" phx-change="filter" for={@form}>
@@ -184,7 +190,6 @@ defmodule CometWeb.BacklogLive.Collection do
     """
   end
 
-  attr :live_action, :atom, required: true
   attr :game, Games.Game
 
   defp show_game_modal(assigns) do
@@ -247,14 +252,12 @@ defmodule CometWeb.BacklogLive.Collection do
 
   defp edit_game_modal(assigns) do
     changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
-    platforms = platforms() |> Map.values()
-    statuses = statuses() |> Map.values()
 
     assigns =
       assigns
       |> assign(:form, to_form(changeset))
-      |> assign(:platforms, platforms)
-      |> assign(:statuses, statuses)
+      |> assign(:platforms, Constants.platforms(:values))
+      |> assign(:statuses, Constants.statuses(:values))
 
     ~H"""
     <.game_modal id={"edit-game-modal-#{@game.id}"} game={@game}>
@@ -315,52 +318,5 @@ defmodule CometWeb.BacklogLive.Collection do
       </.form>
     </.game_modal>
     """
-  end
-
-  defp status_badge(assigns = %{status: status}) do
-    {label, _} = statuses() |> Map.get(status)
-
-    color =
-      case status do
-        :completed -> "success"
-        :in_progress -> "warning"
-        :pending -> "info"
-      end
-
-    assigns = assign(assigns, %{label: label, color: color})
-
-    ~H"""
-    <.badge color={@color}>{@label}</.badge>
-    """
-  end
-
-  defp platform_badge(assigns = %{platform: platform}) do
-    {label, _} = platforms() |> Map.get(platform, "unknown")
-    assigns = assign(assigns, :label, label)
-
-    ~H"""
-    <.badge color="neutral">{@label}</.badge>
-    """
-  end
-
-  defp platforms() do
-    %{
-      pc: {"PC", :pc},
-      ps1: {"PS1", :ps1},
-      ps2: {"PS2", :ps2},
-      ps3: {"PS3", :ps3},
-      ps4: {"PS4", :ps4},
-      ps5: {"PS5", :ps5},
-      psp: {"PSP", :psp},
-      switch: {"Switch", :switch}
-    }
-  end
-
-  defp statuses() do
-    %{
-      completed: {"Completed", :completed},
-      in_progress: {"In Progress", :in_progress},
-      pending: {"Pending", :pending}
-    }
   end
 end

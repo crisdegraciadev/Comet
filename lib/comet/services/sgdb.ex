@@ -15,16 +15,26 @@ defmodule Comet.Services.SGDB do
     end
   end
 
-  def get_covers(id, api_key) when is_integer(id) do
+  def get_game(id, api_key) do
+    case Req.get(game_url(id), options(api_key)) do
+      {:ok, %{body: %{"data" => []}}} -> {:error, "No game found"}
+      {:ok, %{body: %{"data" => data}}} -> {:ok, %{game: parse_game(data)}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def get_covers(id, api_key) do
     case Req.get(cover_url(id), options(api_key)) do
-      {:ok, %{body: %{"data" => data}}} -> {:ok, parse_covers(data)}
+      {:ok, %{body: %{"data" => []}}} -> {:error, "No covers found"}
+      {:ok, %{body: %{"data" => data}}} -> {:ok, %{covers: parse_covers(data)}}
       {:error, reason} -> {:error, reason}
     end
   end
 
   def get_heroes(id, api_key) do
     case Req.get(hero_url(id), options(api_key)) do
-      {:ok, %{body: %{"data" => data}}} -> {:ok, parse_heroes(data)}
+      {:ok, %{body: %{"data" => []}}} -> {:error, "No heores found"}
+      {:ok, %{body: %{"data" => data}}} -> {:ok, %{heroes: parse_heroes(data)}}
       {:error, reason} -> {:error, reason}
     end
   end
@@ -37,11 +47,15 @@ defmodule Comet.Services.SGDB do
     do: [{"Authorization", "Bearer #{api_key}"}, {"Accept", "application/json"}]
 
   defp search_url(query), do: "#{@base_url}/search/autocomplete/#{URI.encode(query)}"
+  defp game_url(id), do: "#{@base_url}/games/id/#{id}"
   defp cover_url(id), do: "#{@base_url}/grids/game/#{id}?dimensions=600x900"
   defp hero_url(id), do: "#{@base_url}/heroes/game/#{id}?dimensions=1920x620"
 
+  defp parse_game(data),
+    do: %{id: data["id"], name: data["name"]}
+
   defp parse_games(data),
-    do: Enum.map(data, fn game -> %{id: game["id"], name: game["name"]} end)
+    do: Enum.map(data, fn game -> parse_game(game) end)
 
   defp parse_covers(data),
     do: Enum.map(data, fn cover -> %{style: cover["style"], url: cover["url"]} end)

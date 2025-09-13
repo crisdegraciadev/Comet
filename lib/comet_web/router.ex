@@ -56,7 +56,7 @@ defmodule CometWeb.Router do
 
     scope "/browser" do
       live "/collection", BrowserLive.Collection, :list
-      live "/collection/new", BrowserLive.Collection, :add
+      live "/collection/:id/new", BrowserLive.Collection, :new
     end
 
     post "/users/update-password", UserSessionController, :update_password

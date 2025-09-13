@@ -2,10 +2,11 @@ defmodule CometWeb.CustomComponents do
   use Phoenix.Component
   use Gettext, backend: CometWeb.Gettext
 
+
   import CometWeb.CoreComponents
-  import CometWeb.InputComponents
 
   alias Comet.Games.Game
+  alias Comet.Services.Constants
 
   attr :id, :string, required: true
   attr :game, Game, required: true
@@ -48,6 +49,32 @@ defmodule CometWeb.CustomComponents do
 
       <.link class="modal-backdrop" href="/backlog/collection"></.link>
     </dialog>
+    """
+  end
+
+  def status_badge(assigns = %{status: status}) do
+    {label, _} = Constants.statuses() |> Map.get(status)
+
+    color =
+      case status do
+        :completed -> "success"
+        :in_progress -> "warning"
+        :pending -> "info"
+      end
+
+    assigns = assign(assigns, %{label: label, color: color})
+
+    ~H"""
+    <.badge color={@color}>{@label}</.badge>
+    """
+  end
+
+  def platform_badge(assigns = %{platform: platform}) do
+    {label, _} = Constants.platforms() |> Map.get(platform, "unknown")
+    assigns = assign(assigns, :label, label)
+
+    ~H"""
+    <.badge color="neutral">{@label}</.badge>
     """
   end
 end
