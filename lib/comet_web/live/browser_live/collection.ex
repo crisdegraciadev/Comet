@@ -1,6 +1,8 @@
 defmodule CometWeb.BrowserLive.Collection do
+  alias CometWeb.LiveComponents.AsyncGameCardComponent
   use CometWeb, :live_view
-  alias Comet.Services.SteamGridDB
+
+  alias Comet.Services.SGDB
   alias Comet.Games.Game
 
   on_mount {CometWeb.UserAuth, :require_sudo_mode}
@@ -23,6 +25,36 @@ defmodule CometWeb.BrowserLive.Collection do
   }
 
   @impl true
+  def render(assigns) do
+    ~H"""
+    <Layouts.app
+      flash={@flash}
+      current_scope={@current_scope}
+      current_module={["browser", "collection"]}
+    >
+      <.search_form api_key={@api_key} />
+      <.search_results api_key={@api_key} results={@results} />
+
+      <.add_game_modal
+        :if={@live_action == :add}
+        game={@selected_game}
+        current_scope={@current_scope}
+      />
+
+      <.live_component
+        :if={@selected_game}
+        module={CometWeb.LiveComponents.ImageSelectorComponent}
+        id={"image-selector-#{@selected_game.id}"}
+        game={@selected_game}
+        field={@image_selector_field}
+        api_key={@api_key}
+        show={@show_image_selector}
+      />
+    </Layouts.app>
+    """
+  end
+
+  @impl true
   def mount(_params, _session, socket) do
     user = Comet.Accounts.get_user_with_profile!(socket.assigns.current_scope.user.id)
     api_key = user.profile.api_key
@@ -30,8 +62,7 @@ defmodule CometWeb.BrowserLive.Collection do
     socket =
       assign(socket, %{
         api_key: api_key,
-        search_query: "",
-        search_results: nil,
+        results: [],
         loading: false,
         selected_game: nil,
         show_add_modal: false,
@@ -58,38 +89,11 @@ defmodule CometWeb.BrowserLive.Collection do
   end
 
   @impl true
-  def render(assigns) do
-    ~H"""
-    <div id="browser-container" phx-hook="OpenUrl">
-      <Layouts.app
-        flash={@flash}
-        current_scope={@current_scope}
-        current_module={["browser", "collection"]}
-      >
-        <.search_form api_key={@api_key} search_query={@search_query} />
-
-        <.loading_indicator :if={@loading} loading={@loading} />
-
-        <.search_results :if={@search_results} results={@search_results} />
-
-        <.add_game_modal
-          :if={@live_action == :add && @selected_game}
-          game={@selected_game}
-          current_scope={@current_scope}
-        />
-
-        <.live_component
-          :if={@selected_game}
-          module={CometWeb.LiveComponents.ImageSelectorComponent}
-          id={"image-selector-#{@selected_game.id}"}
-          game={@selected_game}
-          field={@image_selector_field}
-          api_key={@api_key}
-          show={@show_image_selector}
-        />
-      </Layouts.app>
-    </div>
-    """
+  def handle_event("search", %{"query" => query}, %{assigns: %{api_key: api_key}} = socket) do
+    case SGDB.search(query, api_key) do
+      {:ok, results} -> {:noreply, assign(socket, results: results)}
+      {:error, reason} -> {:noreply, put_flash(socket, :error, reason)}
+    end
   end
 
   defp to_atom(str, default) when is_binary(str) do
@@ -105,6 +109,7 @@ defmodule CometWeb.BrowserLive.Collection do
 
   attr :field, :string, required: true
   attr :game_id, :any, required: true
+
   defp image_edit_button(assigns) do
     ~H"""
     <button
@@ -123,59 +128,56 @@ defmodule CometWeb.BrowserLive.Collection do
   end
 
   attr :api_key, :string, default: nil
-  attr :search_query, :string, default: ""
+
   defp search_form(assigns) do
+    assigns = assign(assigns, :form, to_form(%{"query" => ""}))
+
     ~H"""
     <div class="flex flex-col gap-4">
-      <.header>
-        Game Browser
-        <:subtitle>Search for games on SteamGridDB</:subtitle>
-      </.header>
-
-      <.form :if={@api_key != nil and @api_key != ""} for={%{}} class="flex gap-2" id="search-form" phx-submit="search">
+      <.form
+        for={%{}}
+        class="flex gap-2 items-center"
+        id="search-form"
+        phx-submit="search"
+      >
         <.input
-          name="query"
-          fieldset_class="grow"
+          field={@form[:query]}
+          disabled={!@api_key}
+          fieldset_class="grow !mb-0"
           placeholder="Search for games..."
           autocomplete="off"
-          value={@search_query}
+          type="text"
         />
-        <.button type="submit" phx-disable-with="Searching...">
-          <.icon name="hero-magnifying-glass" />
-          Search
+        <.button disabled={!@api_key} type="submit" phx-disable-with="Searching...">
+          <.icon name="hero-magnifying-glass" /> Search
         </.button>
       </.form>
 
-      <div :if={@api_key == nil or @api_key == ""} class="alert alert-warning">
+      <.alert :if={!@api_key} color="warning">
         <.icon name="hero-exclamation-triangle" class="w-6 h-6 text-white" />
         <span>
           You need to configure your SteamGridDB API key in
           <.link href={~p"/settings/api_key"} class="link link-primary">Settings</.link>
           to search for games.
         </span>
-      </div>
+      </.alert>
     </div>
     """
   end
 
-  attr :loading, :boolean, default: false
-  defp loading_indicator(assigns) do
-    ~H"""
-    <div class="flex justify-center items-center py-8">
-      <div class="loading loading-spinner loading-lg"></div>
-      <span class="ml-2">Searching for games...</span>
-    </div>
-    """
-  end
-
-  attr :results, :list, required: true
   defp search_results(assigns) do
     ~H"""
     <div class="space-y-4">
       <h2 class="text-xl font-semibold">Search Results</h2>
 
-      <div class="grid grid-cols-8 gap-4">
-        <.game_card :for={game <- @results} id={"game-#{game.id}"} game={game} />
+      <div class="grid grid-cols-10 gap-4">
+        <.live_component
+          :for={game <- @results}
+          module={AsyncGameCardComponent}
+          id={"async-game-card-#{game.id}"}
+          game={game}
+          api_key={@api_key}
+        />
       </div>
 
       <div :if={@results == []} class="text-center py-8 text-base-content/70">
@@ -185,9 +187,14 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
-  attr :game, :map, required: true
   attr :id, :string, required: true
+  attr :game, :map, required: true
+  attr :api_key, :string, default: nil
+
   defp game_card(assigns) do
+    cover = SGDB.get_covers(assigns.game.id, assigns.api_key) |> cover()
+    assigns = assigns |> assign(:cover, cover)
+
     ~H"""
     <div
       id={@id}
@@ -196,14 +203,14 @@ defmodule CometWeb.BrowserLive.Collection do
       class="cursor-pointer"
     >
       <div class="rounded-md flex flex-col gap-2 game-cover-shadow bg-base-300 relative">
-        <div class="absolute top-2 left-2 flex gap-1 flex-col">
-          <.badge :if={@game.verified} color="success" size="xs">Verified</.badge>
-          <.badge :if={@game.steam_id} color="info" size="xs">Steam</.badge>
-        </div>
+        <!-- <div class="absolute top-2 left-2 flex gap-1 flex-col"> -->
+        <!--   <.badge :if={@game.verified} color="success" size="xs">Verified</.badge> -->
+        <!--   <.badge :if={@game.steam_id} color="info" size="xs">Steam</.badge> -->
+        <!-- </div> -->
 
         <img
           class="aspect-2/3 rounded-tl-md rounded-tr-md"
-          src={@game.cover_url}
+          src={@cover.url}
           alt={@game.name}
         />
 
@@ -221,6 +228,7 @@ defmodule CometWeb.BrowserLive.Collection do
       end
 
     {label, _} = Map.get(@statuses, status_atom, {"Pending", :pending})
+
     color =
       case status_atom do
         :completed -> "success"
@@ -241,7 +249,7 @@ defmodule CometWeb.BrowserLive.Collection do
 
     {label, _} = Map.get(@platforms, platform_atom, {"Unknown", :unknown})
     assigns = assign(assigns, label: label)
-    ~H"<.badge color='neutral'>{@label}</.badge>"
+    ~H"<.badge color=\"neutral\">{@label}</.badge>"
   end
 
   # attr :id, :string, required: true
@@ -284,6 +292,7 @@ defmodule CometWeb.BrowserLive.Collection do
 
   attr :game, :map, required: true
   attr :current_scope, :map, required: true
+
   defp add_game_modal(assigns) do
     changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
 
@@ -316,8 +325,20 @@ defmodule CometWeb.BrowserLive.Collection do
               fieldset_class="grow"
             />
           </div>
-          <.input field={f[:cover]} label="Cover URL" placeholder="Cover URL" value={@game.cover} autocomplete="off" />
-          <.input field={f[:hero]} label="Hero URL" placeholder="Hero URL" value={@game.hero} autocomplete="off" />
+          <.input
+            field={f[:cover]}
+            label="Cover URL"
+            placeholder="Cover URL"
+            value={@game.cover}
+            autocomplete="off"
+          />
+          <.input
+            field={f[:hero]}
+            label="Hero URL"
+            placeholder="Hero URL"
+            value={@game.hero}
+            autocomplete="off"
+          />
         </div>
         <div class="flex flex-col gap-2 mt-4">
           <.button variant="primary" type="submit" phx-disable-with="Adding...">Add</.button>
@@ -326,27 +347,6 @@ defmodule CometWeb.BrowserLive.Collection do
       </.form>
     </.game_modal>
     """
-  end
-
-  @impl true
-  def handle_event("search", %{"query" => query}, socket) do
-    socket = assign(socket, loading: true, search_query: query)
-
-    case SteamGridDB.search_games_with_covers(query, socket.assigns.api_key) do
-      {:ok, results} ->
-        results_with_heroes =
-          Enum.map(results, fn game ->
-            Map.put(game, :hero, SteamGridDB.get_hero(game.id, socket.assigns.api_key))
-          end)
-
-        {:noreply,
-         socket
-         |> assign(search_results: results_with_heroes, loading: false)
-         |> put_flash(:info, "Found #{length(results_with_heroes)} games")}
-
-      {:error, message} ->
-        {:noreply, assign(socket, loading: false) |> put_flash(:error, message)}
-    end
   end
 
   @impl true
@@ -404,14 +404,21 @@ defmodule CometWeb.BrowserLive.Collection do
 
   @impl true
   def handle_info({:image_selected, field, url}, socket) do
-    key = case field do
-      "cover" -> :cover
-      "hero" -> :hero
-    end
+    key =
+      case field do
+        "cover" -> :cover
+        "hero" -> :hero
+      end
 
     {:noreply,
      socket
      |> assign(show_image_selector: false, image_selector_field: nil)
      |> update(:selected_game, fn game -> Map.put(game, key, url) end)}
+  end
+
+  defp cover(covers) do
+    covers
+    |> Enum.map(fn cover -> %{url: cover[:url], style: cover[:style]} end)
+    |> Enum.find(Enum.at(covers, 0), fn cover -> cover.style == "official" end)
   end
 end

@@ -1,7 +1,7 @@
 defmodule CometWeb.LiveComponents.ImageSelectorComponent do
   use CometWeb, :live_component
 
-  alias Comet.Services.SteamGridDB
+  alias Comet.Services.SGDB
   alias Comet.Games.Game
 
   attr :game, :map, required: true
