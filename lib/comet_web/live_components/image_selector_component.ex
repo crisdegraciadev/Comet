@@ -5,6 +5,7 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
   alias Comet.Games.Game
 
   attr :game, :map, required: true
+  attr :backdrop_link, :string
   attr :current_scope, :map, required: true
 
   @impl true
@@ -13,23 +14,32 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
   end
 
   @impl true
-  def update(%{current_scope: current_scope, game: game}, socket) do
-    assigns = %{
-      covers: SteamGridDB.get_all_covers(game.steamgriddb_id, current_scope.user.profile.api_key),
-      heroes: SteamGridDB.get_all_heroes(game.steamgriddb_id, current_scope.user.profile.api_key),
-      current_scope: current_scope,
-      game: game,
-      checked: :cover
-    }
+  def update(assigns, socket) do
+    %{current_scope: current_scope, game: game} = assigns
 
-    {:ok, assign(socket, assigns)}
+    api_key = current_scope.user.profile.api_key
+
+    socket =
+      socket
+      |> assign(:current_scope, current_scope)
+      |> assign(:game, game)
+      |> assign(:checked, :cover)
+      |> assign(:backdrop_link, assigns[:backdrop_link])
+      |> assign_async(:covers, fn -> SGDB.get_covers(game.sgdb_id, api_key) end)
+      |> assign_async(:heroes, fn -> SGDB.get_heroes(game.sgdb_id, api_key) end)
+
+    {:ok, socket}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
     <div id={"images-selector-#{@game.id}"}>
-      <.game_modal id={"change-cover-game-modal-#{@game.id}"} game={@game}>
+      <.game_modal
+        id={"change-cover-game-modal-#{@game.id}"}
+        backdrop_link={~p"/backlog/collection"}
+        game={@game}
+      >
         <div class="tabs tabs-border">
           <input
             type="radio"
@@ -39,16 +49,30 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
             checked={@checked == :cover}
           />
           <div class="tab-content border border-base-content/10 bg-base-200 p-2 rounded-box">
-            <div class="grid grid-cols-4 gap-4 overflow-y-scroll max-h-[500px] pr-2">
-              <img
-                :for={img <- @covers}
-                src={img}
-                class="cursor-pointer rounded"
-                phx-click="update_image"
-                phx-value-url={img}
-                phx-value-field={:cover}
-                phx-target={@myself}
-              />
+            <div class="h-[500px] w-full overflow-y-auto">
+              <.async_result :let={covers} assign={@covers}>
+                <:loading>
+                  <.skeleton width="w-full" height="h-full" />
+                </:loading>
+
+                <:failed>
+                  <div class="w-full h-full flex flex-col items-center justify-center">
+                    <.icon name="hero-photo" class="size-16" />
+                  </div>
+                </:failed>
+
+                <div class="grid grid-cols-4 gap-4 pr-2">
+                  <img
+                    :for={cover <- covers}
+                    src={cover.url}
+                    class="cursor-pointer rounded"
+                    phx-click="update_image"
+                    phx-value-url={cover.url}
+                    phx-value-field={:cover}
+                    phx-target={@myself}
+                  />
+                </div>
+              </.async_result>
             </div>
           </div>
 
@@ -59,23 +83,38 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
             aria-label="Heros"
             checked={@checked == :hero}
           />
+
           <div class="tab-content border border-base-content/10 bg-base-200 p-2 rounded-box">
-            <div class="grid grid-cols-2 gap-4 overflow-y-scroll max-h-[500px] pr-2">
-              <img
-                :for={img <- @heroes}
-                src={img}
-                class="cursor-pointer rounded"
-                phx-click="update_image"
-                phx-value-url={img}
-                phx-value-field={:hero}
-                phx-target={@myself}
-              />
+            <div class="h-[500px] w-full overflow-y-auto">
+              <.async_result :let={heroes} assign={@heroes}>
+                <:loading>
+                  <.skeleton width="w-full" height="h-full" />
+                </:loading>
+
+                <:failed>
+                  <div class="w-full h-full flex flex-col items-center justify-center">
+                    <.icon name="hero-photo" class="size-16" />
+                  </div>
+                </:failed>
+
+                <div class="grid grid-cols-2 gap-4 pr-2">
+                  <img
+                    :for={hero <- heroes}
+                    src={hero.url}
+                    class="cursor-pointer rounded"
+                    phx-click="update_image"
+                    phx-value-url={hero.url}
+                    phx-value-field={:hero}
+                    phx-target={@myself}
+                  />
+                </div>
+              </.async_result>
             </div>
           </div>
         </div>
 
         <div class="mt-4 flex justify-end">
-          <.button variant="error" href={~p"/backlog/collection/#{@game}/edit"}>Back</.button>
+          <.button variant="error" navigate={~p"/backlog/collection/#{@game}/edit"}>Back</.button>
         </div>
       </.game_modal>
     </div>

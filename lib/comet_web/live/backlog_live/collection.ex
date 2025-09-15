@@ -177,7 +177,7 @@ defmodule CometWeb.BacklogLive.Collection do
 
   defp game_card(assigns) do
     ~H"""
-    <.link id={@id} href={~p"/backlog/collection/#{@game}"}>
+    <.link id={@id} navigate={~p"/backlog/collection/#{@game}"}>
       <div class="rounded-md flex flex-col gap-2 game-cover-shadow bg-base-300 relative">
         <div class="absolute top-2 left-2 flex gap-1 flex-col">
           <.status_badge status={@game.status} />
@@ -194,12 +194,16 @@ defmodule CometWeb.BacklogLive.Collection do
 
   defp show_game_modal(assigns) do
     ~H"""
-    <.game_modal id={"show-game-modal-#{@game.id}"} game={@game}>
+    <.game_modal
+      id={"show-game-modal-#{@game.id}"}
+      game={@game}
+      backdrop_link={~p"/backlog/collection"}
+    >
       <:actions>
-        <.button href={~p"/backlog/collection/#{@game}/edit"}>
+        <.button navigate={~p"/backlog/collection/#{@game}/edit"}>
           <.icon name="hero-pencil" /> Edit
         </.button>
-        <.button variant="error" href={~p"/backlog/collection/#{@game}/delete"}>
+        <.button variant="error" navigate={~p"/backlog/collection/#{@game}/delete"}>
           <.icon name="hero-trash" /> Delete
         </.button>
       </:actions>
@@ -230,7 +234,11 @@ defmodule CometWeb.BacklogLive.Collection do
 
   defp delete_game_modal(assigns) do
     ~H"""
-    <.game_modal id={"delete-game-modal-#{@game.id}"} game={@game}>
+    <.game_modal
+      id={"delete-game-modal-#{@game.id}"}
+      game={@game}
+      backdrop_link={~p"/backlog/collection"}
+    >
       <div class="flex flex-col gap-2">
         <p>
           You are about to <span class="font-bold">delete</span>
@@ -241,7 +249,7 @@ defmodule CometWeb.BacklogLive.Collection do
       </div>
       <div class="flex justify-end w-full gap-2">
         <.button variant="error" phx-click="delete" phx-value-id={@game.id}>Confirm</.button>
-        <.button href={~p"/backlog/collection/#{@game.id}"}>Cancel</.button>
+        <.button navigate={~p"/backlog/collection/#{@game.id}"}>Cancel</.button>
       </div>
     </.game_modal>
     """
@@ -260,9 +268,13 @@ defmodule CometWeb.BacklogLive.Collection do
       |> assign(:statuses, Constants.statuses(:values))
 
     ~H"""
-    <.game_modal id={"edit-game-modal-#{@game.id}"} game={@game}>
+    <.game_modal
+      id={"edit-game-modal-#{@game.id}"}
+      game={@game}
+      backdrop_link={~p"/backlog/collection"}
+    >
       <:actions>
-        <.button href={~p"/backlog/collection/#{@game.id}/images/edit"}>
+        <.button navigate={~p"/backlog/collection/#{@game.id}/images/edit"}>
           <.icon name="hero-photo" /> Images
         </.button>
       </:actions>
@@ -293,27 +305,25 @@ defmodule CometWeb.BacklogLive.Collection do
             fieldset_class="grow"
           />
         </div>
-        <div class="flex gap-1 relative">
-          <.input
-            field={@form[:cover]}
-            label="Cover URL"
-            placeholder="Cover URL"
-            value={@game.cover}
-            autocomplete="off"
-          />
-        </div>
-        <div class="flex flex-col gap-1 relative">
-          <.input
-            field={@form[:hero]}
-            label="Hero URL"
-            placeholder="Hero URL"
-            value={@game.hero}
-            autocomplete="off"
-          />
-        </div>
+        <.input
+          field={@form[:cover]}
+          label="Cover URL"
+          placeholder="Cover URL"
+          value={@game.cover}
+          autocomplete="off"
+          fieldset_class="grow"
+        />
+        <.input
+          field={@form[:hero]}
+          label="Hero URL"
+          placeholder="Hero URL"
+          value={@game.hero}
+          autocomplete="off"
+          fieldset_class="grow"
+        />
         <div class="flex justify-end gap-2 mt-4">
           <.button type="submit" phx-disable-with="Saving...">Save</.button>
-          <.button variant="error" href={~p"/backlog/collection/#{@game.id}"}> Cancel</.button>
+          <.button variant="error" navigate={~p"/backlog/collection/#{@game.id}"}> Cancel</.button>
         </div>
       </.form>
     </.game_modal>

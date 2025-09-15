@@ -2,14 +2,13 @@ defmodule CometWeb.CustomComponents do
   use Phoenix.Component
   use Gettext, backend: CometWeb.Gettext
 
-
   import CometWeb.CoreComponents
 
-  alias Comet.Games.Game
   alias Comet.Services.Constants
 
   attr :id, :string, required: true
-  attr :game, Game, required: true
+  attr :game, :map, required: true
+  attr :backdrop_link, :string
   attr :rest, :global
 
   slot :actions
@@ -47,7 +46,7 @@ defmodule CometWeb.CustomComponents do
         </div>
       </div>
 
-      <.link class="modal-backdrop" href="/backlog/collection"></.link>
+      <.link :if={assigns[:backdrop_link]} class="modal-backdrop" navigate={@backdrop_link}></.link>
     </dialog>
     """
   end

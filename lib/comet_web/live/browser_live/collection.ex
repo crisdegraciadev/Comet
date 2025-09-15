@@ -1,17 +1,15 @@
 defmodule CometWeb.BrowserLive.Collection do
   use CometWeb, :live_view
 
+  alias Comet.Games.Game
   alias Comet.Services.SGDB
   alias Comet.Services.Constants
-  alias Comet.Games.Game
-  alias CometWeb.LiveComponents
+  alias CometWeb.LiveComponents.{ImageSelectorComponent, SGDBGameCardComponent}
 
   on_mount {CometWeb.UserAuth, :require_sudo_mode}
 
   @impl true
   def render(assigns) do
-    IO.inspect(assigns)
-
     ~H"""
     <Layouts.app
       flash={@flash}
@@ -23,77 +21,65 @@ defmodule CometWeb.BrowserLive.Collection do
 
       <.add_game_modal
         :if={@live_action == :new}
-        game={@game}
+        sgdb_game={@sgdb_game}
         current_scope={@current_scope}
+        query={@query}
       />
     </Layouts.app>
     """
   end
 
   @impl true
-  def mount(%{"id" => id, "query" => query}, _session, %{assigns: %{live_action: :new}} = socket) do
-    api_key = load_api_key(socket)
-
-    {:ok, %{game: %{id: id, name: name}}} = SGDB.get_game(id, api_key)
-    {:ok, %{covers: covers}} = SGDB.get_covers(id, api_key)
-    {:ok, %{heroes: heroes}} = SGDB.get_heroes(id, api_key)
-
-    game = %Game{
-      id: -1,
-      steamgriddb_id: id,
-      name: name,
-      cover: main_asset_url(covers),
-      hero: main_asset_url(heroes)
-    }
-
-    socket = socket |> assign(:api_key, api_key) |> assign(:game, game)
-
-    socket =
-      case SGDB.search(query, api_key) do
-        {:ok, results} -> socket |> assign(:results, results)
-        {:error, reason} -> socket |> put_flash(:error, reason)
-      end
-
-    {:ok, socket}
-  end
-
-  @impl true
-  def mount(%{"query" => query}, _session, socket) do
-    api_key = load_api_key(socket)
-
-    socket = assign(socket, :api_key, api_key)
-
-    socket =
-      case SGDB.search(query, api_key) do
-        {:ok, results} -> socket |> assign(:results, results)
-        {:error, reason} -> socket |> put_flash(:error, reason)
-      end
-
-    {:ok, socket}
-  end
-
-  @impl true
   def mount(_params, _session, socket) do
-    api_key = load_api_key(socket)
-
-    socket = socket |> assign(:api_key, api_key)
-
     {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(%{"query" => query, "id" => id}, _session, socket) do
+    socket =
+      socket
+      |> assign(:query, query)
+      |> assign_api_key()
+      |> assign_game(id)
+      |> assign_results()
+
+    {:noreply, socket}
   end
 
   @impl true
   def handle_params(%{"query" => query}, _session, socket) do
-    {:noreply, assign(socket, :query, query)}
+    socket = socket |> assign(:query, query) |> assign_api_key() |> assign_results()
+
+    {:noreply, socket}
   end
 
   @impl true
   def handle_params(_params, _session, socket) do
+    socket = socket |> assign_api_key()
+
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("search", %{"query" => query}, socket) do
     {:noreply, push_navigate(socket, to: ~p"/browser/collection?query=#{query}", replace: true)}
+  end
+
+  @impl true
+  def handle_event("save", %{"game" => game_params}, socket) do
+    user = socket.assigns.current_scope.user
+    query = socket.assigns.query
+
+    case Game.Command.create(user, game_params) do
+      {:ok, game} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "#{game.name} added to backlog")
+         |> push_navigate(to: ~p"/browser/collection?query=#{query}")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Error adding game to backlog")}
+    end
   end
 
   attr :api_key, :string, default: nil
@@ -151,18 +137,16 @@ defmodule CometWeb.BrowserLive.Collection do
   end
 
   defp search_results(assigns) do
-    IO.inspect(assigns.results, label: "results-label")
-
     ~H"""
     <div class="grid grid-cols-10 gap-4">
       <.link
-        :for={game <- @results}
-        navigate={~p"/browser/collection/#{game.id}/new?query=#{@query}"}
+        :for={sgdb_game <- @results}
+        navigate={~p"/browser/collection/#{sgdb_game.id}/new?query=#{@query}"}
       >
         <.live_component
-          module={LiveComponents.ResultGameCardComponent}
-          id={game.id}
-          game={game}
+          module={SGDBGameCardComponent}
+          id={sgdb_game.id}
+          sgdb_game={sgdb_game}
           api_key={@api_key}
         />
       </.link>
@@ -170,146 +154,117 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
-  attr :game, :map
+  attr :sgdb_game, :map, required: true
+  attr :query, :string, required: true
   attr :current_scope, :map, required: true
 
   defp add_game_modal(assigns) do
-    ~H"""
-    <.game_modal id={"edit-game-modal-#{@game.id}"} game={@game}>
-      <!-- <:actions> -->
-      <!--   <.button href={~p"/backlog/collection/#{@game.id}/images/edit"}> -->
-      <!--     <.icon name="hero-photo" /> Images -->
-      <!--   </.button> -->
-      <!-- </:actions> -->
+    changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
 
-      <!-- <.form -->
-      <!--   class="flex flex-col h-full justify-between" -->
-      <!--   id={"edit-game-form-#{@game.id}"} -->
-      <!--   phx-submit="update" -->
-      <!--   for={@form} -->
-      <!-- > -->
-      <!--   <.input field={@form[:name]} label="Name" value={@game.name} autocomplete="off" /> -->
-      <!---->
-      <!--   <div class="flex gap-2"> -->
-      <!--     <.input -->
-      <!--       field={@form[:platform]} -->
-      <!--       type="select" -->
-      <!--       label="Platform" -->
-      <!--       options={@platforms} -->
-      <!--       value={@game.platform} -->
-      <!--       fieldset_class="grow" -->
-      <!--     /> -->
-      <!--     <.input -->
-      <!--       field={@form[:status]} -->
-      <!--       type="select" -->
-      <!--       label="Status" -->
-      <!--       options={@statuses} -->
-      <!--       value={@game.status} -->
-      <!--       fieldset_class="grow" -->
-      <!--     /> -->
-      <!--   </div> -->
-      <!--   <div class="flex gap-1 relative"> -->
-      <!--     <.input -->
-      <!--       field={@form[:cover]} -->
-      <!--       label="Cover URL" -->
-      <!--       placeholder="Cover URL" -->
-      <!--       value={@game.cover} -->
-      <!--       autocomplete="off" -->
-      <!--     /> -->
-      <!--   </div> -->
-      <!--   <div class="flex flex-col gap-1 relative"> -->
-      <!--     <.input -->
-      <!--       field={@form[:hero]} -->
-      <!--       label="Hero URL" -->
-      <!--       placeholder="Hero URL" -->
-      <!--       value={@game.hero} -->
-      <!--       autocomplete="off" -->
-      <!--     /> -->
-      <!--   </div> -->
-      <!--   <div class="flex justify-end gap-2 mt-4"> -->
-      <!--     <.button type="submit" phx-disable-with="Saving...">Save</.button> -->
-      <!--     <.button variant="error" href={~p"/backlog/collection/#{@game.id}"}> Cancel</.button> -->
-      <!--   </div> -->
-      <!-- </.form> -->
+    platforms = Constants.platforms(:values)
+
+    {_, defaultPlatform} =
+      Enum.find(platforms, Enum.at(platforms, 0), fn {_, value} -> value == :pc end)
+
+    statuses = Constants.statuses(:values)
+
+    {_, defaultStatus} =
+      Enum.find(statuses, Enum.at(statuses, 0), fn {_, value} -> value == :pending end)
+
+    assigns =
+      assigns
+      |> assign(:form, to_form(changeset))
+      |> assign(:platforms, platforms)
+      |> assign(:defaultPlatform, defaultPlatform)
+      |> assign(:statuses, statuses)
+      |> assign(:defaultStatus, defaultStatus)
+
+    ~H"""
+    <.game_modal
+      id={"edit-sgdb-game-modal-#{@sgdb_game.id}"}
+      game={@sgdb_game}
+      backdrop_link={~p"/browser/collection?query=#{@query}"}
+    >
+      <.form
+        class="flex flex-col h-full justify-between"
+        id={"new-game-form-#{@sgdb_game.id}"}
+        phx-submit="save"
+        for={@form}
+      >
+        <.input field={@form[:name]} label="Name" value={@sgdb_game.name} autocomplete="off" />
+
+        <div class="flex gap-2">
+          <.input
+            field={@form[:platform]}
+            type="select"
+            label="Platform"
+            options={@platforms}
+            value={@defaultPlatform}
+            fieldset_class="grow"
+          />
+          <.input
+            field={@form[:status]}
+            type="select"
+            label="Status"
+            options={@statuses}
+            value={@defaultStatus}
+            fieldset_class="grow"
+          />
+        </div>
+        <.input
+          field={@form[:sgdb_id]}
+          value={@sgdb_game.id}
+          autocomplete="off"
+          fieldset_class="hidden"
+        />
+        <.input
+          field={@form[:cover]}
+          value={@sgdb_game.cover}
+          fieldset_class="hidden"
+        />
+        <.input
+          field={@form[:hero]}
+          value={@sgdb_game.hero}
+          fieldset_class="grow hidden"
+        />
+        <div class="flex justify-end gap-2 mt-4">
+          <.button type="submit" phx-disable-with="Saving...">Save</.button>
+          <!-- <.button variant="error" href={~p"/backlog/collection/#{@game.id}"}>Cancel</.button> -->
+        </div>
+      </.form>
     </.game_modal>
     """
   end
 
-  # @impl true
-  # def handle_event("select_game", %{"game" => game_json}, socket) do
-  #   {:ok, game} = Jason.decode(game_json, keys: :atoms)
-  #
-  #   game =
-  #     game
-  #     |> Map.put_new(:status, :pending)
-  #     |> Map.put_new(:cover, Map.get(game, :cover_url))
-  #     |> Map.delete(:cover_url)
-  #     |> Map.put_new(:platform, :pc)
-  #
-  #   {:noreply,
-  #    push_patch(socket, to: ~p"/browser/collection/new?game=#{URI.encode(Jason.encode!(game))}")}
-  # end
+  defp assign_game(%{assigns: %{api_key: api_key}} = socket, id) do
+    {:ok, %{game: %{id: id, name: name}}} = SGDB.get_game(id, api_key)
+    {:ok, %{covers: covers}} = SGDB.get_covers(id, api_key)
+    {:ok, %{heroes: heroes}} = SGDB.get_heroes(id, api_key)
 
-  @impl true
-  def handle_event("close_modal", _params, socket) do
-    {:noreply, assign(socket, selected_game: nil)}
+    sgdb_game = %{
+      id: id,
+      name: name,
+      cover: Game.Utils.main_asset_url(covers),
+      hero: Game.Utils.main_asset_url(heroes)
+    }
+
+    assign(socket, :sgdb_game, sgdb_game)
   end
 
-  @impl true
-  def handle_event("close_add_modal", _params, socket) do
-    {:noreply, assign(socket, selected_game: nil, live_action: :list)}
+  defp assign_results(%{assigns: %{api_key: api_key, query: query}} = socket) do
+    case SGDB.search(query, api_key) do
+      {:ok, results} -> socket |> assign(:results, results)
+      {:error, reason} -> socket |> put_flash(:error, reason)
+    end
   end
 
-  # @impl true
-  # def handle_event("add_to_backlog", %{"game" => game_params}, socket) do
-  #   user = socket.assigns.current_scope.user
-  #
-  #   game_params =
-  #     game_params
-  #     |> Map.update("status", nil, &to_atom(&1, :pending))
-  #     |> Map.update("platform", nil, &to_atom(&1, :pc))
-  #     |> Map.put("steamgriddb_id", socket.assigns.selected_game.id)
-  #
-  #   case Comet.Games.Game.Command.create(user, game_params) do
-  #     {:ok, _game} ->
-  #       {:noreply,
-  #        socket
-  #        |> put_flash(:info, "Game added to backlog")
-  #        |> assign(live_action: :list)
-  #        |> push_navigate(to: ~p"/backlog/collection")}
-  #
-  #     {:error, changeset} ->
-  #       {:noreply, assign(socket, :changeset, changeset)}
-  #   end
-  # end
-
-  @impl true
-  def handle_event("suggest_images", %{"field" => field}, socket) do
-    {:noreply, assign(socket, show_image_selector: true, image_selector_field: field)}
-  end
-
-  @impl true
-  def handle_info({:image_selected, field, url}, socket) do
-    key =
-      case field do
-        "cover" -> :cover
-        "hero" -> :hero
-      end
-
-    {:noreply,
-     socket
-     |> assign(show_image_selector: false, image_selector_field: nil)
-     |> update(:selected_game, fn game -> Map.put(game, key, url) end)}
-  end
-
-  defp load_api_key(socket) do
+  defp assign_api_key(socket) do
     user = Comet.Accounts.get_user_with_profile!(socket.assigns.current_scope.user.id)
-    user.profile.api_key
-  end
+    api_key = user.profile.api_key
 
-  defp main_asset_url(assets) do
-    assets
-    |> Enum.find(Enum.at(assets, 0), fn asset -> asset.style == "official" end)
-    |> Map.get(:url)
+    assign(socket, %{
+      api_key: api_key,
+      current_scope: %{user: user}
+    })
   end
 end
