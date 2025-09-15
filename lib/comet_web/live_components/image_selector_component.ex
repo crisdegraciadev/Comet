@@ -114,7 +114,7 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
         </div>
 
         <div class="mt-4 flex justify-end">
-          <.button variant="error" navigate={~p"/backlog/collection/#{@game}/edit"}>Back</.button>
+          <.button navigate={~p"/backlog/collection/#{@game}/edit"}>Done</.button>
         </div>
       </.game_modal>
     </div>
