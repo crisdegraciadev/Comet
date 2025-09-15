@@ -4,7 +4,7 @@ defmodule CometWeb.BrowserLive.Collection do
   alias Comet.Games.Game
   alias Comet.Services.SGDB
   alias Comet.Services.Constants
-  alias CometWeb.LiveComponents.{ImageSelectorComponent, SGDBGameCardComponent}
+  alias CometWeb.LiveComponents.SGDBGameCardComponent
 
   on_mount {CometWeb.UserAuth, :require_sudo_mode}
 
