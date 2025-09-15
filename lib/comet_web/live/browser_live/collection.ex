@@ -123,7 +123,7 @@ defmodule CometWeb.BrowserLive.Collection do
   defp search_results(%{results: nil} = assigns) do
     ~H"""
     <div class="text-center py-8 text-base-content/70">
-      No Results
+      Type a search term to find your games.
     </div>
     """
   end
