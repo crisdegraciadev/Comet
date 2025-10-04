@@ -29,14 +29,14 @@ defmodule CometWeb.CoreComponents do
         @kind == :info && "alert-info",
         @kind == :error && "alert-error"
       ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :info} name="lucide-information-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :error} name="lucide-exclamation-circle" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
         </div>
         <div class="flex-1" />
-        <.icon name="hero-x-mark" class="size-5 cursor-pointer opacity-40 group-hover:opacity-70" />
+        <.icon name="lucide-x-mark" class="size-5 cursor-pointer opacity-40 group-hover:opacity-70" />
       </div>
     </div>
     """
@@ -215,11 +215,12 @@ defmodule CometWeb.CoreComponents do
   end
 
   attr :name, :string, required: true
-  attr :class, :string, default: "size-4"
+  attr :size, :string, default: "size-4"
+  attr :class, :string, default: nil
 
-  def icon(%{name: "hero-" <> _} = assigns) do
+  def icon(%{name: "lucide-" <> _} = assigns) do
     ~H"""
-    <span class={[@name, @class]} />
+    <span class={[@name, @size, @class]} />
     """
   end
 
@@ -276,8 +277,18 @@ defmodule CometWeb.CoreComponents do
   attr :size, :string, values: ~w(xs sm md lg xl), default: "md"
 
   attr :color, :string,
-    values: ~w(primary secondary accent neutral info success warning error),
-    default: "success"
+    values: [
+      nil,
+      "badge-primary",
+      "badge-secondary",
+      "badge-accent",
+      "badge-neutral",
+      "badge-info",
+      "badge-success",
+      "badge-warning",
+      "badge-error"
+    ],
+    default: nil
 
   attr :variant, :string, values: [nil, "soft", "outline", "dash", "ghost"], default: nil
   attr :class, :string, default: nil
@@ -288,7 +299,7 @@ defmodule CometWeb.CoreComponents do
     <span class={[
       "badge",
       "badge-#{@size}",
-      "badge-#{@color}",
+      @color,
       @variant && "badge-#{@variant}",
       @class
     ]}>

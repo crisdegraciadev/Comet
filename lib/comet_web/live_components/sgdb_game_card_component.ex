@@ -34,7 +34,7 @@ defmodule CometWeb.LiveComponents.SGDBGameCardComponent do
 
           <:failed>
             <div class="w-full h-full flex flex-col items-center justify-center">
-              <.icon name="hero-photo" class="size-16" />
+              <.icon name="lucide-photo" class="size-16" />
             </div>
           </:failed>
 

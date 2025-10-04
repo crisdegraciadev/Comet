@@ -178,7 +178,7 @@ defmodule CometWeb.BacklogLive.Collection do
   defp game_card(assigns) do
     ~H"""
     <.link id={@id} navigate={~p"/backlog/collection/#{@game}"}>
-      <div class="rounded-md flex flex-col gap-2 game-cover-shadow bg-base-300 relative">
+      <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-grey bg-cm-black-200 relative">
         <div class="absolute top-2 left-2 flex gap-1 flex-col">
           <.status_badge status={@game.status} />
           <.platform_badge platform={@game.platform} />
@@ -201,28 +201,28 @@ defmodule CometWeb.BacklogLive.Collection do
     >
       <:actions>
         <.button navigate={~p"/backlog/collection/#{@game}/edit"}>
-          <.icon name="hero-pencil" /> Edit
+          <.icon name="lucide-pencil" /> Edit
         </.button>
         <.button variant="error" navigate={~p"/backlog/collection/#{@game}/delete"}>
-          <.icon name="hero-trash" /> Delete
+          <.icon name="lucide-trash" /> Delete
         </.button>
       </:actions>
 
-      <div class="flex flex-col gap-2 rounded-box border border-base-content/10 bg-base-200  p-4">
+      <div class="flex flex-col gap-2 rounded-box bg-cm-black-100 border border-cm-grey  p-4">
         <div class="grid grid-cols-2">
-          <span><.icon name="hero-circle-stack" class="mr-2 size-4" /> Status</span>
+          <span><.icon name="lucide-circle-stack" class="mr-2 size-4" /> Status</span>
           <.status_badge status={@game.status} />
         </div>
         <div class="grid grid-cols-2">
-          <span><.icon name="hero-computer-desktop" class="mr-2 size-4" />Platform</span>
+          <span><.icon name="lucide-computer-desktop" class="mr-2 size-4" />Platform</span>
           <.platform_badge platform={@game.platform} />
         </div>
         <div class="grid grid-cols-2">
-          <span><.icon name="hero-calendar" class="mr-2 size-4" />Purchased</span>
+          <span><.icon name="lucide-calendar" class="mr-2 size-4" />Purchased</span>
           <span>15 de Enero, 2018</span>
         </div>
         <div class="grid grid-cols-2">
-          <span><.icon name="hero-calendar-days" class="mr-2 size-4" />Completition</span>
+          <span><.icon name="lucide-calendar-days" class="mr-2 size-4" />Completition</span>
           <span>10 de Junio, 2020</span>
         </div>
       </div>
@@ -275,7 +275,7 @@ defmodule CometWeb.BacklogLive.Collection do
     >
       <:actions>
         <.button navigate={~p"/backlog/collection/#{@game.id}/images/edit"}>
-          <.icon name="hero-photo" /> Images
+          <.icon name="lucide-photo" /> Images
         </.button>
       </:actions>
 

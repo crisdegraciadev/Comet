@@ -17,11 +17,11 @@ defmodule CometWeb.CustomComponents do
   def game_modal(assigns) do
     ~H"""
     <dialog id={@id} class="modal modal-open shadow-lg bg-transparent" {@rest}>
-      <div class="game-modal modal-box max-w-[calc(1920px*0.4)] flex flex-col gap-5">
+      <div class="game-modal modal-box bg-cm-black-200 border border-cm-grey !shadow-none max-w-[calc(1920px*0.4)] flex flex-col gap-5">
         <div class="relative h-[calc((900px*0.3)+(0.25rem*8))]">
           <img
             src={@game.hero}
-            class="h-[calc(620px*0.4)] rounded-md bg-white/30 brightness-50"
+            class="h-[calc(620px*0.4)] rounded-md bg-white/30 brightness-50 border border-cm-grey"
           />
           <img
             src={@game.cover}
@@ -56,9 +56,9 @@ defmodule CometWeb.CustomComponents do
 
     color =
       case status do
-        :completed -> "success"
-        :in_progress -> "warning"
-        :pending -> "info"
+        :completed -> "badge-success"
+        :in_progress -> "badge-warning"
+        :pending -> "badge-info"
       end
 
     assigns = assign(assigns, %{label: label, color: color})

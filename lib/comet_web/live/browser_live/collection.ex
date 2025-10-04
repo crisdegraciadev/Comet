@@ -104,12 +104,12 @@ defmodule CometWeb.BrowserLive.Collection do
           type="text"
         />
         <.button disabled={!@api_key} type="submit" phx-disable-with="Searching...">
-          <.icon name="hero-magnifying-glass" /> Search
+          <.icon name="lucide-magnifying-glass" /> Search
         </.button>
       </.form>
 
       <.alert :if={!@api_key} color="warning">
-        <.icon name="hero-exclamation-triangle" class="w-6 h-6 text-white" />
+        <.icon name="lucide-exclamation-triangle" class="w-6 h-6 text-white" />
         <span>
           You need to configure your SteamGridDB API key in
           <.link href={~p"/settings/api_key"} class="link link-primary">Settings</.link>

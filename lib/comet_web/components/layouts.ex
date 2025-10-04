@@ -77,7 +77,7 @@ defmodule CometWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+        <.icon name="lucide-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
 
       <.flash
@@ -89,44 +89,8 @@ defmodule CometWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+        <.icon name="lucide-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
-    </div>
-    """
-  end
-
-  defp theme_toggle(assigns) do
-    ~H"""
-    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
-
-      <span
-        class="flex p-2 cursor-pointer w-1/3"
-        phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="system"
-      >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </span>
-
-      <span
-        class="flex p-2 cursor-pointer w-1/3"
-        variant="ghost"
-        shape="circle"
-        phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="light"
-      >
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </span>
-
-      <span
-        class="flex p-2 cursor-pointer w-1/3"
-        variant="ghost"
-        shape="circle"
-        phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="dark"
-      >
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </span>
     </div>
     """
   end
@@ -140,7 +104,7 @@ defmodule CometWeb.Layouts do
     ~H"""
     <div class="sidebar drawer lg:drawer-open">
       <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
-      <div class="drawer-content flex flex-col">
+      <div class="drawer-content bg-cm-black-100 flex flex-col">
         <label for="my-drawer-2" class="btn btn-primary drawer-button lg:hidden">
           Open drawer
         </label>
@@ -150,49 +114,51 @@ defmodule CometWeb.Layouts do
       <div class="drawer-side !overflow-visible">
         <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
 
-        <div class="sidebar-menu menu bg-base-200 text-base-content min-h-full w-70 p-2">
+        <div class="sidebar-menu menu bg-cm-black-200 border-r border-r-cm-grey text-base-content min-h-full w-70 p-2">
           <div class="navigation">
-            <a href="/" class="flex-1 flex w-fit items-center gap-2 p-2">
-              <img src={~p"/images/logo.svg"} width="44" />
-              <span class="text-2xl font-semibold">Comet</span>
-            </a>
+            <div class="user-settings bg-cm-grey p-2 rounded">
+              <div class="flex gap-2">
+                <.avatar size="small" />
+                <div class="info">
+                  <span class="font-medium">Joseph</span>
+                  <span class="text-xs font-light text-base-content/50">
+                    {@current_scope.user.email}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-            <ul class="menu bg-base-200 text-base-content min-h-full w-full">
-              <li><.link href={~p"/"}><.icon name="hero-home" />Home</.link></li>
-              <li><.link href={~p"/browser/collection"}><.icon name="hero-magnifying-glass" />Browser</.link></li>
+            <ul class="p-2 !mt-0 text-cm-white text-cm-s min-h-full w-full">
               <li>
-                <.link href={~p"/backlog/collection"}>
-                  <.icon name="hero-rectangle-stack" />Backlog
+                <.link href={~p"/"} class="hover:!bg-cm-grey">
+                  <.icon name="lucide-house" /> Home
+                </.link>
+              </li>
+              <li>
+                <.link href={~p"/browser/collection"} class="hover:!bg-cm-grey">
+                  <.icon name="lucide-file-search" />Browser
+                </.link>
+              </li>
+              <li>
+                <.link href={~p"/backlog/collection"} class="hover:!bg-cm-grey">
+                  <.icon name="lucide-gamepad-2" />Backlog
                 </.link>
               </li>
             </ul>
           </div>
 
-          <.dropdown
-            :if={@current_scope}
-            class="w-full"
-            position="dropdown-right dropdown-end"
-          >
-            <:trigger>
-              <div class="user-settings hover:bg-base-100 p-2 rounded">
-                <div class="flex gap-2">
-                  <.avatar size="small" />
-                  <div class="info">
-                    <span class="font-medium">Joseph</span>
-                    <span class="text-xs font-light text-base-content/50">
-                      {@current_scope.user.email}
-                    </span>
-                  </div>
-                </div>
-                <.icon name="hero-cog-6-tooth" />
-              </div>
-            </:trigger>
-
-            <:actions>
-              <.link href={~p"/settings/account"}>Settings</.link>
-              <.link href={~p"/users/log-out"} method="delete">Log out</.link>
-            </:actions>
-          </.dropdown>
+          <ul class="p-2 !mt-0 text-cm-white text-cm-s min-h-full w-full">
+            <li>
+              <.link href={~p"/settings/account"}>
+                <.icon name="lucide-bolt" />Settings
+              </.link>
+            </li>
+            <li>
+              <.link href={~p"/users/log-out"} method="delete">
+                <.icon name="lucide-log-out" />Logout
+              </.link>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -215,21 +181,9 @@ defmodule CometWeb.Layouts do
       })
 
     ~H"""
-    <nav class="topbar navbar justify-between">
+    <nav class="topbar navbar justify-between bg-cm-black-200 border-b border-b-cm-grey">
       <div class="navbar-start flex items-center">
         <span class="px-4 font-semibold text-xl">{@title}</span>
-        <div class="navigation">
-          <a
-            :for={{label, path} <- @tabs}
-            class={["nav-item", String.contains?(path, @sub_path) && "nav-item-active"]}
-            href={path}
-          >
-            {label}
-          </a>
-        </div>
-      </div>
-      <div class="navbar-end">
-        <.theme_toggle />
       </div>
     </nav>
     """
