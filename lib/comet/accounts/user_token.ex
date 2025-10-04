@@ -5,7 +5,7 @@ defmodule Comet.Accounts.UserToken do
 
   @rand_size 32
 
-  @session_validity_in_days 14
+  @session_validity_in_days 365
 
   schema "users_tokens" do
     field :token, :binary
