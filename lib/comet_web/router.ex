@@ -51,11 +51,12 @@ defmodule CometWeb.Router do
       live "/collection/:id", BacklogLive.Collection, :show
       live "/collection/:id/delete", BacklogLive.Collection, :delete
       live "/collection/:id/edit", BacklogLive.Collection, :edit
+      live "/collection/:id/images/edit", BacklogLive.Collection, :images_edit
     end
 
     scope "/browser" do
       live "/collection", BrowserLive.Collection, :list
-      live "/collection/new", BrowserLive.Collection, :add
+      live "/collection/:id/new", BrowserLive.Collection, :new
     end
 
     post "/users/update-password", UserSessionController, :update_password

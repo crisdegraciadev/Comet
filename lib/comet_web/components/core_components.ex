@@ -75,7 +75,7 @@ defmodule CometWeb.CoreComponents do
     assigns =
       assigns
       |> assign(:class, [
-        "btn",
+        "btn shrink-1",
         assigns[:variant] && "btn-#{assigns[:variant]}",
         assigns[:size] && "btn-#{assigns[:size]}",
         assigns[:icon] && "btn-#{assigns[:icon]}",
@@ -97,9 +97,36 @@ defmodule CometWeb.CoreComponents do
     end
   end
 
+  attr :class, :string, default: nil
+  attr :color, :string, values: [nil, "info", "success", "warning", "error"], default: nil
+  attr :soft, :boolean, default: false
+  attr :outline, :boolean, default: false
+  attr :dash, :boolean, default: false
+
   slot :inner_block, required: true
+
+  def alert(assigns) do
+    assigns =
+      assigns
+      |> assign(:class, [
+        "alert",
+        assigns[:color] && "alert-#{assigns[:color]}",
+        assigns[:soft] && "alert-soft",
+        assigns[:outline] && "alet-outline",
+        assigns[:dash] && "alet-dash",
+        assigns[:class]
+      ])
+
+    ~H"""
+    <div role="alert" class={@class}>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
   slot :subtitle
   slot :actions
+  slot :inner_block, required: true
 
   def header(assigns) do
     ~H"""
@@ -253,9 +280,7 @@ defmodule CometWeb.CoreComponents do
     default: "success"
 
   attr :variant, :string, values: [nil, "soft", "outline", "dash", "ghost"], default: nil
-
   attr :class, :string, default: nil
-
   slot :inner_block, required: true
 
   def badge(assigns) do
@@ -269,6 +294,15 @@ defmodule CometWeb.CoreComponents do
     ]}>
       {render_slot(@inner_block)}
     </span>
+    """
+  end
+
+  attr :width, :string, default: nil
+  attr :height, :string, default: nil
+
+  def skeleton(assigns) do
+    ~H"""
+    <div class={["skeleton", @width, @height]} />
     """
   end
 

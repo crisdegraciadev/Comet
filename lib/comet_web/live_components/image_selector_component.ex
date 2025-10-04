@@ -1,74 +1,138 @@
 defmodule CometWeb.LiveComponents.ImageSelectorComponent do
   use CometWeb, :live_component
-  alias Comet.Services.SteamGridDB
+
+  alias Comet.Services.SGDB
+  alias Comet.Games.Game
 
   attr :game, :map, required: true
-  attr :field, :string, required: true
-  attr :api_key, :string, required: true
-  attr :show, :boolean, default: false
+  attr :backdrop_link, :string
+  attr :current_scope, :map, required: true
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, images: [])}
+    {:ok, socket}
   end
 
   @impl true
   def update(assigns, socket) do
-    images =
-      if assigns.show do
-        load_images(assigns.game, assigns.field, assigns.api_key)
-      else
-        []
-      end
+    %{current_scope: current_scope, game: game} = assigns
 
-    {:ok, assign(socket, assigns |> Map.put(:images, images))}
+    api_key = current_scope.user.profile.api_key
+
+    socket =
+      socket
+      |> assign(:current_scope, current_scope)
+      |> assign(:game, game)
+      |> assign(:checked, :cover)
+      |> assign(:backdrop_link, assigns[:backdrop_link])
+      |> assign_async(:covers, fn -> SGDB.get_covers(game.sgdb_id, api_key) end)
+      |> assign_async(:heroes, fn -> SGDB.get_heroes(game.sgdb_id, api_key) end)
+
+    {:ok, socket}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="image-selector-component">
-      <dialog :if={@show} id="image-selector-modal" class="modal modal-open shadow-lg bg-transparent">
-        <div
-          class="modal-box w-1/2 max-w-[1280px]"
-          phx-click-away="close"
-          phx-target={@myself}
-        >
-          <h2 class="font-semibold mb-4">Select an image for {@field}</h2>
-          <div class="grid grid-cols-4 gap-4">
-            <img :for={img <- @images} src={img} class="cursor-pointer rounded"
-              phx-click="select_image"
-              phx-value-url={img}
-              phx-value-field={@field}
-              phx-target={@myself} />
+    <div id={"images-selector-#{@game.id}"}>
+      <.game_modal
+        id={"change-cover-game-modal-#{@game.id}"}
+        backdrop_link={~p"/backlog/collection"}
+        game={@game}
+      >
+        <div class="tabs tabs-border">
+          <input
+            type="radio"
+            name="my_tabs_2"
+            class="tab"
+            aria-label="Covers"
+            checked={@checked == :cover}
+          />
+          <div class="tab-content border border-base-content/10 bg-base-200 p-2 rounded-box">
+            <div class="h-[500px] w-full overflow-y-auto">
+              <.async_result :let={covers} assign={@covers}>
+                <:loading>
+                  <.skeleton width="w-full" height="h-full" />
+                </:loading>
+
+                <:failed>
+                  <div class="w-full h-full flex flex-col items-center justify-center">
+                    <.icon name="hero-photo" class="size-16" />
+                  </div>
+                </:failed>
+
+                <div class="grid grid-cols-4 gap-4 pr-2">
+                  <img
+                    :for={cover <- covers}
+                    src={cover.url}
+                    class="cursor-pointer rounded"
+                    phx-click="update_image"
+                    phx-value-url={cover.url}
+                    phx-value-field={:cover}
+                    phx-target={@myself}
+                  />
+                </div>
+              </.async_result>
+            </div>
           </div>
-          <div class="mt-4 flex justify-end">
-            <.button phx-click="close" phx-target={@myself}>Close</.button>
+
+          <input
+            type="radio"
+            name="my_tabs_2"
+            class="tab"
+            aria-label="Heros"
+            checked={@checked == :hero}
+          />
+
+          <div class="tab-content border border-base-content/10 bg-base-200 p-2 rounded-box">
+            <div class="h-[500px] w-full overflow-y-auto">
+              <.async_result :let={heroes} assign={@heroes}>
+                <:loading>
+                  <.skeleton width="w-full" height="h-full" />
+                </:loading>
+
+                <:failed>
+                  <div class="w-full h-full flex flex-col items-center justify-center">
+                    <.icon name="hero-photo" class="size-16" />
+                  </div>
+                </:failed>
+
+                <div class="grid grid-cols-2 gap-4 pr-2">
+                  <img
+                    :for={hero <- heroes}
+                    src={hero.url}
+                    class="cursor-pointer rounded"
+                    phx-click="update_image"
+                    phx-value-url={hero.url}
+                    phx-value-field={:hero}
+                    phx-target={@myself}
+                  />
+                </div>
+              </.async_result>
+            </div>
           </div>
         </div>
-      </dialog>
+
+        <div class="mt-4 flex justify-end">
+          <.button navigate={~p"/backlog/collection/#{@game}/edit"}>Done</.button>
+        </div>
+      </.game_modal>
     </div>
     """
   end
 
   @impl true
-  def handle_event("select_image", %{"url" => url, "field" => field}, socket) do
-    send(self(), {:image_selected, field, url})
-    {:noreply, assign(socket, show: false)}
-  end
+  def handle_event(
+        "update_image",
+        %{"url" => url, "field" => field},
+        %{assigns: %{game: game, current_scope: current_scope}} = socket
+      ) do
+    {:ok, updated_game} = Game.Command.update(game, current_scope.user, Map.put(%{}, field, url))
 
-  @impl true
-  def handle_event("close", _params, socket) do
-    {:noreply, assign(socket, show: false)}
-  end
+    socket = socket |> assign(:game, updated_game) |> assign(:checked, String.to_atom(field))
 
-  defp load_images(game, "cover", api_key) do
-    game_id = Map.get(game, :steamgriddb_id, game.id)
-    SteamGridDB.get_all_covers(game_id, api_key) |> Enum.uniq()
-  end
+    send(self(), {:updated_image, updated_game})
 
-  defp load_images(game, "hero", api_key) do
-    game_id = Map.get(game, :steamgriddb_id, game.id)
-    SteamGridDB.get_all_heroes(game_id, api_key) |> Enum.uniq()
+    {:noreply, socket}
   end
 end
