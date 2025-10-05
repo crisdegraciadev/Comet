@@ -313,7 +313,7 @@ defmodule CometWeb.CoreComponents do
 
   def skeleton(assigns) do
     ~H"""
-    <div class={["skeleton", @width, @height]} />
+    <div class={["skeleton bg-cm-black-100", @width, @height]} />
     """
   end
 

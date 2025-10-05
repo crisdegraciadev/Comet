@@ -17,7 +17,7 @@ defmodule CometWeb.LiveComponents.SGDBGameCardComponent do
     socket =
       socket
       |> assign(:sgdb_game, sgdb_game)
-      |> assign_async(:covers, fn -> SGDB.get_covers(sgdb_game.id, api_key) end)
+      |> assign_async(:heroes, fn -> SGDB.get_heroes(sgdb_game.id, api_key) end)
 
     {:ok, socket}
   end
@@ -26,27 +26,36 @@ defmodule CometWeb.LiveComponents.SGDBGameCardComponent do
   def render(assigns) do
     ~H"""
     <div class="cursor-pointer">
-      <div class="rounded-md flex flex-col gap-2 game-cover-shadow bg-base-300 aspect-2/3">
-        <.async_result :let={covers} assign={@covers}>
+      <div class="rounded-md flex flex-col gap-2 game-cover-shadow bg-cm-black-200 border border-cm-grey aspect-96/31">
+        <.async_result :let={heroes} assign={@heroes}>
           <:loading>
             <.skeleton width="h-full" height="h-full" />
           </:loading>
 
           <:failed>
-            <div class="w-full h-full flex flex-col items-center justify-center">
-              <.icon name="lucide-photo" class="size-16" />
-            </div>
+            <.missing_hero />
           </:failed>
 
+          <.missing_hero :if={heroes == []} />
+
           <img
-            class="rounded-tl-md rounded-tr-md"
-            src={Game.Utils.main_asset_url(covers)}
+            :if={heroes != []}
+            class="rounded-tl-md rounded-tr-md brightness-50"
+            src={Game.Utils.main_asset_url(heroes)}
             alt={@sgdb_game.name}
           />
         </.async_result>
 
         <span class="font-semibold text-sm truncate px-2 text-center pb-2">{@sgdb_game.name}</span>
       </div>
+    </div>
+    """
+  end
+
+  defp missing_hero(assigns) do
+    ~H"""
+    <div class="w-full h-full flex flex-col items-center justify-center">
+      <.icon name="lucide-file-image" size="size-16" />
     </div>
     """
   end

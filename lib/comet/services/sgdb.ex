@@ -25,7 +25,6 @@ defmodule Comet.Services.SGDB do
 
   def get_covers(id, api_key) do
     case Req.get(cover_url(id), options(api_key)) do
-      {:ok, %{body: %{"data" => []}}} -> {:error, "No covers found"}
       {:ok, %{body: %{"data" => data}}} -> {:ok, %{covers: parse_covers(data)}}
       {:error, reason} -> {:error, reason}
     end
@@ -33,7 +32,6 @@ defmodule Comet.Services.SGDB do
 
   def get_heroes(id, api_key) do
     case Req.get(hero_url(id), options(api_key)) do
-      {:ok, %{body: %{"data" => []}}} -> {:error, "No heores found"}
       {:ok, %{body: %{"data" => data}}} -> {:ok, %{heroes: parse_heroes(data)}}
       {:error, reason} -> {:error, reason}
     end

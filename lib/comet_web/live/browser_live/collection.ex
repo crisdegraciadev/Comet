@@ -138,7 +138,7 @@ defmodule CometWeb.BrowserLive.Collection do
 
   defp search_results(assigns) do
     ~H"""
-    <div class="grid grid-cols-10 gap-4">
+    <div class="grid grid-cols-2 gap-4">
       <.link
         :for={sgdb_game <- @results}
         navigate={~p"/browser/collection/#{sgdb_game.id}/new?query=#{@query}"}
