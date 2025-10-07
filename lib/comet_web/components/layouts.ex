@@ -101,6 +101,18 @@ defmodule CometWeb.Layouts do
   slot :inner_block, required: true
 
   def sidebar(assigns) do
+    top_menu = [
+      {"Backlog", ~p"/backlog/collection", "lucide-gamepad-2"},
+      {"Browser", ~p"/browser/collection", "lucide-file-search"}
+    ]
+
+    bottom_menu = [
+      {"Settings", ~p"/settings/account", "lucide-bolt"},
+      {"Logout", ~p"/users/log-out", "lucide-log-out"}
+    ]
+
+    assigns = assigns |> assign(:top_menu, top_menu) |> assign(:bottom_menu, bottom_menu)
+
     ~H"""
     <div class="sidebar drawer lg:drawer-open">
       <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
@@ -129,35 +141,28 @@ defmodule CometWeb.Layouts do
             </div>
 
             <ul class="p-2 !mt-0 text-cm-white text-cm-s min-h-full w-full">
-              <li>
-                <.link href={~p"/"} class="hover:!bg-cm-grey">
-                  <.icon name="lucide-house" /> Home
-                </.link>
-              </li>
-              <li>
-                <.link href={~p"/browser/collection"} class="hover:!bg-cm-grey">
-                  <.icon name="lucide-file-search" />Browser
-                </.link>
-              </li>
-              <li>
-                <.link href={~p"/backlog/collection"} class="hover:!bg-cm-grey">
-                  <.icon name="lucide-gamepad-2" />Backlog
-                </.link>
-              </li>
+              <.menu orientation="menu-vertical" class="p-0 w-full">
+                <:item
+                  :for={{label, path, icon} <- @top_menu}
+                  href={path}
+                  label={label}
+                  icon={icon}
+                  active={"/#{Enum.join(@current_module, "/")}" == path}
+                />
+              </.menu>
             </ul>
           </div>
 
           <ul class="p-2 !mt-0 text-cm-white text-cm-s min-h-full w-full">
-            <li>
-              <.link href={~p"/settings/account"}>
-                <.icon name="lucide-bolt" />Settings
-              </.link>
-            </li>
-            <li>
-              <.link href={~p"/users/log-out"} method="delete">
-                <.icon name="lucide-log-out" />Logout
-              </.link>
-            </li>
+            <.menu orientation="menu-vertical" class="p-0 w-full">
+              <:item
+                :for={{label, path, icon} <- @bottom_menu}
+                href={path}
+                label={label}
+                icon={icon}
+                active={"/#{Enum.join(@current_module, "/")}" == path}
+              />
+            </.menu>
           </ul>
         </div>
       </div>
@@ -168,22 +173,23 @@ defmodule CometWeb.Layouts do
   attr :current_module, :string, default: "/"
 
   defp topbar(assigns) do
-    [main_path, sub_path] = assigns.current_module
-
+    [main_path | _] = assigns.current_module
     {title, tabs} = topbar_module(main_path)
 
-    assigns =
-      assigns
-      |> assign(%{
-        title: title,
-        tabs: tabs,
-        sub_path: sub_path
-      })
+    assigns = assign(assigns, %{title: title, tabs: tabs})
 
     ~H"""
     <nav class="topbar navbar justify-between bg-cm-black-200 border-b border-b-cm-grey">
       <div class="navbar-start flex items-center">
         <span class="px-4 font-semibold text-xl">{@title}</span>
+        <.menu :if={@tabs} class="p-0">
+          <:item
+            :for={{label, path} <- @tabs}
+            href={path}
+            label={label}
+            active={"/#{Enum.join(@current_module, "/")}" == path}
+          />
+        </.menu>
       </div>
     </nav>
     """
@@ -199,16 +205,10 @@ defmodule CometWeb.Layouts do
   end
 
   defp topbar_module("backlog") do
-    {"Backlog",
-     [
-       {"Collection", ~p"/backlog/collection"}
-     ]}
+    {"Backlog", []}
   end
 
   defp topbar_module("browser") do
-    {"Browser",
-     [
-       {"Collection", ~p"/browser/collection"}
-     ]}
+    {"Browser", []}
   end
 end

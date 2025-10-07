@@ -16,7 +16,10 @@ defmodule CometWeb.BacklogLive.Collection do
       current_scope={@current_scope}
       current_module={["backlog", "collection"]}
     >
-      <.filters />
+      <div class="flex justify-between">
+        <.filters />
+        <.display_options />
+      </div>
       <.game_list streams={@streams} />
 
       <.show_game_modal :if={@live_action == :show} game={@game} />
@@ -143,21 +146,61 @@ defmodule CometWeb.BacklogLive.Collection do
 
     ~H"""
     <.form class="flex gap-2" id="filter-form" phx-change="filter" for={@form}>
+      <.input field={@form[:name]} fieldset_class="grow" placeholder="Search" autocomplete="off" />
       <.input
         field={@form[:platform]}
-        fieldset_class="w-1/8"
         type="select"
         options={@platforms}
         prompt="Platform"
       />
       <.input
         field={@form[:status]}
-        fieldset_class="w-1/8"
         type="select"
         options={@statuses}
         prompt="Status"
       />
-      <.input field={@form[:name]} fieldset_class="grow" placeholder="Search" autocomplete="off" />
+    </.form>
+    """
+  end
+
+  defp display_options(assigns) do
+    form = to_form(%{"cols" => "", "name" => "", "asset" => ""})
+
+    assigns = assign(assigns, %{form: form})
+
+    ~H"""
+    <.form
+      class="flex items-center gap-4"
+      id="display-options-form"
+      phx-change="change_layout"
+      for={@form}
+    >
+      <.input
+        field={@form[:cols]}
+        label_wrapper_class="select"
+        label_span_class="!mb-0"
+        type="select"
+        label="Columns"
+        options={[1, 2, 3, 4, 5, 6]}
+      />
+
+      <.input
+        field={@form[:asset]}
+        label_wrapper_class="select"
+        label_span_class="!mb-0"
+        type="select"
+        label="Asset"
+        options={[{"Cover", :cover}, {"Hero", :hero}]}
+      />
+
+      <.input
+        field={@form[:name]}
+        label_wrapper_class="select"
+        label_span_class="!mb-0"
+        type="select"
+        label="Name"
+        options={[{"Yes", :yes}, {"No", :no}]}
+      />
     </.form>
     """
   end
@@ -275,7 +318,7 @@ defmodule CometWeb.BacklogLive.Collection do
     >
       <:actions>
         <.button navigate={~p"/backlog/collection/#{@game.id}/images/edit"}>
-          <.icon name="lucide-photo" /> Images
+          <.icon name="lucide-file-image" /> Images
         </.button>
       </:actions>
 

@@ -72,6 +72,6 @@ defmodule CometWeb.Router do
     end
 
     post "/users/log-in", UserSessionController, :create
-    delete "/users/log-out", UserSessionController, :delete
+    get "/users/log-out", UserSessionController, :delete
   end
 end

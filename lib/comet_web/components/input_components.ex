@@ -24,6 +24,12 @@ defmodule CometWeb.InputComponents do
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
   attr :class, :string, default: nil, doc: "the input class to extend defaults"
   attr :fieldset_class, :string, default: nil, doc: "the fieldset class to extend defaults"
+
+  attr :label_wrapper_class, :string,
+    default: nil,
+    doc: "the label wrapper class to extend defaults"
+
+  attr :label_span_class, :string, default: nil, doc: "the label span class to extend defaults"
   attr :error_class, :string, default: nil, doc: "the input error class to use over defaults"
 
   attr :rest, :global,
@@ -71,12 +77,12 @@ defmodule CometWeb.InputComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div class={["fieldset mb-2", @fieldset_class]}>
-      <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+      <label class={@label_wrapper_class}>
+        <span :if={@label} class={["label mb-1", @label_span_class]}>{@label}</span>
         <select
           id={@id}
           name={@name}
-          class={["w-full select", @class, @errors != [] && (@error_class || "select-error")]}
+          class={["w-full select !pr-8", @class, @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
           {@rest}
         >

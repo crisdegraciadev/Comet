@@ -317,6 +317,28 @@ defmodule CometWeb.CoreComponents do
     """
   end
 
+  attr :orientation, :string, default: "menu-horizontal"
+  attr :class, :string, default: nil
+
+  slot :item do
+    attr :label, :string
+    attr :href, :string
+    attr :icon, :string
+    attr :active, :boolean
+  end
+
+  def menu(assigns) do
+    ~H"""
+    <ul class={["menu gap-1 !mt-2", @orientation, @class]}>
+      <li :for={item <- @item}>
+        <.link class={[item.active && "menu-active"]} navigate={item.href}>
+          <.icon :if={item[:icon]} name={item.icon} /> {item.label}
+        </.link>
+      </li>
+    </ul>
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

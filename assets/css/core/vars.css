@@ -20,8 +20,18 @@
   --color-white: #f0f1f;
   --color-grey: rgba(255, 255, 255, 0.08);
 
+  --color-neutral: #314157;
+  --color-neutral-content: #f9f9f9;
+
   --color-info: #2C74A0;
+  --color-info-content: #f5f8ff;
+
   --color-success: #297373;
+  --color-success-content: #f4fff7;
+
   --color-warning: #DC3318;
+  --color-warning-content: #fffbea;
+
   --color-error: #DB2955;
+  --color-error-content: #fff4f3;
 }
