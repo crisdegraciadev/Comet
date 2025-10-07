@@ -29,8 +29,8 @@ defmodule CometWeb.CoreComponents do
         @kind == :info && "alert-info",
         @kind == :error && "alert-error"
       ]}>
-        <.icon :if={@kind == :info} name="lucide-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="lucide-exclamation-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :info} name="lucide-info" class="size-5 shrink-0" />
+        <.icon :if={@kind == :error} name="lucide-circle-x" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
