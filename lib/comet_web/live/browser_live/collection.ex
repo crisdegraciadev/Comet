@@ -16,7 +16,7 @@ defmodule CometWeb.BrowserLive.Collection do
       current_scope={@current_scope}
       current_module={["browser", "collection"]}
     >
-      <.search_form api_key={@api_key} />
+      <.search_form api_key={@api_key} query={assigns[:query]} />
       <.search_results api_key={@api_key} results={assigns[:results]} query={assigns[:query]} />
 
       <.add_game_modal
@@ -83,9 +83,10 @@ defmodule CometWeb.BrowserLive.Collection do
   end
 
   attr :api_key, :string, default: nil
+  attr :query, :string, default: ""
 
   defp search_form(assigns) do
-    assigns = assign(assigns, :form, to_form(%{"query" => ""}))
+    assigns = assign(assigns, :form, to_form(%{"query" => assigns.query}))
 
     ~H"""
     <div class="flex flex-col gap-4">
@@ -104,12 +105,12 @@ defmodule CometWeb.BrowserLive.Collection do
           type="text"
         />
         <.button disabled={!@api_key} type="submit" phx-disable-with="Searching...">
-          <.icon name="lucide-magnifying-glass" /> Search
+          <.icon name="lucide-search" /> Search
         </.button>
       </.form>
 
       <.alert :if={!@api_key} color="warning">
-        <.icon name="lucide-exclamation-triangle" class="w-6 h-6 text-white" />
+        <.icon name="lucide-info" />
         <span>
           You need to configure your SteamGridDB API key in
           <.link href={~p"/settings/api_key"} class="link link-primary">Settings</.link>
@@ -138,7 +139,7 @@ defmodule CometWeb.BrowserLive.Collection do
 
   defp search_results(assigns) do
     ~H"""
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-3 gap-4">
       <.link
         :for={sgdb_game <- @results}
         navigate={~p"/browser/collection/#{sgdb_game.id}/new?query=#{@query}"}

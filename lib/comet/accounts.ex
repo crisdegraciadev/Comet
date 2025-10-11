@@ -1,11 +1,8 @@
 defmodule Comet.Accounts do
-  @moduledoc """
-  The Accounts context.
-  """
-
   import Ecto.Query, warn: false
+
   alias Comet.Repo
-  alias Comet.Accounts.{User, UserToken}
+  alias Comet.Accounts.{User, UserToken, Profile, Preferences}
 
   def get_user_by_email(email) when is_binary(email) do
     Repo.get_by(User, email: email)
@@ -19,9 +16,14 @@ defmodule Comet.Accounts do
 
   def get_user!(id), do: Repo.get!(User, id)
 
-  def build_profile_for_user(user) do
-    %Comet.Accounts.Profile{}
-    |> Comet.Accounts.Profile.changeset(%{}, %{user: user})
+  def build_profile(user) do
+    %Profile{}
+    |> Profile.changeset(%{}, %{user: user})
+  end
+
+  def build_preferences(user) do
+    %Preferences{}
+    |> Preferences.changeset(%{cols: 10, assets: :cover, name: true}, %{user: user})
   end
 
   def register_user(attrs) do
@@ -32,8 +34,8 @@ defmodule Comet.Accounts do
         |> User.password_changeset(attrs)
 
       with {:ok, user} <- Repo.insert(changeset) do
-        build_profile_for_user(user)
-        |> Repo.insert()
+        build_profile(user) |> Repo.insert()
+        build_preferences(user) |> Repo.insert()
 
         {:ok, user}
       else
