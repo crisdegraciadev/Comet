@@ -11,7 +11,7 @@ services:
       - comet_net
 
   app:
-    image: comet:latest
+    image: crisdegraciadev/comet:latest
     depends_on:
       - db
     environment:

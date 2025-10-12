@@ -4,14 +4,29 @@ defmodule Comet.Services.SGDB do
   Documentation: https://www.steamgriddb.com/api/v2
   """
 
-  @base_url "https://www.steamgriddb.com/api/v2"
+  @api_v2 "https://www.steamgriddb.com/api/v2"
+  @public_api "https://www.steamgriddb.com/api/public"
 
-  def search(query, _) when byte_size(query) == 0, do: {:error, "Empty query"}
+  def search(term, _) when byte_size(term) == 0, do: {:error, "Empty search term"}
 
-  def search(query, api_key) do
-    case Req.get(search_url(query), options(api_key)) do
-      {:ok, %{body: %{"data" => data}}} -> {:ok, parse_games(data)}
+  def search(term) do
+    base_json = %{
+      asset_type: "grid",
+      term: term,
+      filters: %{order: "score_desc", dimensions: "600x900"}
+    }
+
+    results =
+      Enum.map(0..3, fn offset ->
+        case Req.post(search_url(), json: Map.put(base_json, :offset, offset)) do
+          {:ok, %{body: %{"data" => %{"games" => games}}}} -> parse_games(games)
+          {:error, reason} -> {:error, reason}
+        end
+      end)
+
+    case Enum.find(results, &match?({:error, _}, &1)) do
       {:error, reason} -> {:error, reason}
+      _ -> {:ok, results |> Enum.concat() |> Enum.sort_by(& &1.score, :desc)}
     end
   end
 
@@ -44,16 +59,16 @@ defmodule Comet.Services.SGDB do
   defp auth_headers(api_key),
     do: [{"Authorization", "Bearer #{api_key}"}, {"Accept", "application/json"}]
 
-  defp search_url(query), do: "#{@base_url}/search/autocomplete/#{URI.encode(query)}"
-  defp game_url(id), do: "#{@base_url}/games/id/#{id}"
-  defp cover_url(id), do: "#{@base_url}/grids/game/#{id}?dimensions=600x900"
-  defp hero_url(id), do: "#{@base_url}/heroes/game/#{id}?dimensions=1920x620"
+  defp search_url(), do: "#{@public_api}/search/main/games"
+  defp game_url(id), do: "#{@api_v2}/games/id/#{id}"
+  defp cover_url(id), do: "#{@api_v2}/grids/game/#{id}?dimensions=600x900"
+  defp hero_url(id), do: "#{@api_v2}/heroes/game/#{id}?dimensions=1920x620"
 
-  defp parse_game(data),
-    do: %{id: data["id"], name: data["name"]}
+  defp parse_game(game, meta \\ %{"total" => 0}),
+    do: %{id: game["id"], name: game["name"], score: meta["total"]}
 
   defp parse_games(data),
-    do: Enum.map(data, fn game -> parse_game(game) end)
+    do: Enum.map(data, fn %{"game" => game, "meta" => meta} -> parse_game(game, meta) end)
 
   defp parse_covers(data),
     do: Enum.map(data, fn cover -> %{style: cover["style"], url: cover["url"]} end)

@@ -139,7 +139,7 @@ defmodule CometWeb.BrowserLive.Collection do
 
   defp search_results(assigns) do
     ~H"""
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-8 gap-4">
       <.link
         :for={sgdb_game <- @results}
         navigate={~p"/browser/collection/#{sgdb_game.id}/new?query=#{@query}"}
@@ -252,8 +252,8 @@ defmodule CometWeb.BrowserLive.Collection do
     assign(socket, :sgdb_game, sgdb_game)
   end
 
-  defp assign_results(%{assigns: %{api_key: api_key, query: query}} = socket) do
-    case SGDB.search(query, api_key) do
+  defp assign_results(%{assigns: %{query: query}} = socket) do
+    case SGDB.search(query) do
       {:ok, results} -> socket |> assign(:results, results)
       {:error, reason} -> socket |> put_flash(:error, reason)
     end

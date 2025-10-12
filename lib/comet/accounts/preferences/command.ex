@@ -8,7 +8,6 @@ defmodule Comet.Accounts.Preferences.Command do
   end
 
   def update(%Preferences{} = preferences, %User{} = user, attrs) do
-    IO.inspect(attrs)
     preferences |> change(user, attrs) |> Repo.update()
   end
 
