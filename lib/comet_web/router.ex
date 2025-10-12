@@ -17,12 +17,6 @@ defmodule CometWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", CometWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
   if Application.compile_env(:comet, :dev_routes) do
     import Phoenix.LiveDashboard.Router
 
@@ -39,6 +33,8 @@ defmodule CometWeb.Router do
     live_session :require_authenticated_user,
       on_mount: [{CometWeb.UserAuth, :require_authenticated}] do
     end
+
+    live "/", RootLive.Root
 
     scope "/settings" do
       live "/account", SettingsLive.Account
