@@ -28,7 +28,7 @@ defmodule CometWeb.SettingsLive.Account do
           autocomplete="username"
           required
         />
-        <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
+        <.button variant="btn-primary" phx-disable-with="Changing...">Change Email</.button>
       </.form>
 
       <div class="divider" />
@@ -62,7 +62,7 @@ defmodule CometWeb.SettingsLive.Account do
           label="Confirm new password"
           autocomplete="new-password"
         />
-        <.button variant="primary" phx-disable-with="Saving...">
+        <.button variant="btn-primary" phx-disable-with="Saving...">
           Save Password
         </.button>
       </.form>

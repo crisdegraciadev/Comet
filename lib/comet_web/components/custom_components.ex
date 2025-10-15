@@ -17,7 +17,7 @@ defmodule CometWeb.CustomComponents do
   def game_modal(assigns) do
     ~H"""
     <dialog id={@id} class="modal modal-open shadow-lg bg-transparent" {@rest}>
-      <div class="game-modal modal-box bg-cm-black-200 border border-cm-grey !shadow-none max-w-[calc(1920px*0.4)] flex flex-col gap-5">
+      <div class="game-modal modal-box bg-cm-black-200 border border-cm-black-300 !shadow-none max-w-[calc(1920px*0.4)] flex flex-col gap-5">
         <div class="relative h-[calc((900px*0.3)+(0.25rem*8))]">
           <.hero url={@game.hero} />
           <.cover url={@game.cover} />
@@ -50,10 +50,10 @@ defmodule CometWeb.CustomComponents do
     <%= if @url do %>
       <img
         src={@url}
-        class="h-[calc(620px*0.4)] rounded-md bg-white/30 brightness-50 border border-cm-grey"
+        class="h-[calc(620px*0.4)] rounded-md bg-white/30 brightness-50 border border-cm-black-300"
       />
     <% else %>
-      <div class="w-full h-[calc(620px*0.4)] flex justify-center items-center rounded-md bg-cm-black-100 border border-cm-grey">
+      <div class="w-full h-[calc(620px*0.4)] flex justify-center items-center rounded-md bg-cm-black-100 border border-cm-black-300">
         <.icon name="lucide-file-image" size="size-16" />
       </div>
     <% end %>
@@ -68,7 +68,7 @@ defmodule CometWeb.CustomComponents do
         class="h-[calc(900px*0.3)] rounded-md absolute top-8 left-6"
       />
     <% else %>
-      <div class="h-[calc(900px*0.3)] w-[calc(600px*0.3)] bg-cm-black-100 flex justify-center items-center rounded-md absolute top-8 left-6 border border-cm-grey">
+      <div class="h-[calc(900px*0.3)] w-[calc(600px*0.3)] bg-cm-black-100 flex justify-center items-center rounded-md absolute top-8 left-6 border border-cm-black-300">
         <.icon name="lucide-file-image" size="size-16" />
       </div>
     <% end %>

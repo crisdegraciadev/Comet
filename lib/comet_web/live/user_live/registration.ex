@@ -45,7 +45,7 @@ defmodule CometWeb.UserLive.Registration do
             required
             autocomplete="new-password"
           />
-          <.button phx-disable-with="Creating account..." variant="primary" class="w-full">
+          <.button phx-disable-with="Creating account..." class="w-full">
             Create an account
           </.button>
         </.form>

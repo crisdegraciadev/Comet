@@ -1,4 +1,5 @@
 :root {
+  /* Spacing */
   --space-xs: 4px;
   --space-s: 8px;
   --space-m: 12px;
@@ -7,6 +8,7 @@
   --space-2xl: 24px;
   --space-3xl: 28px;
 
+  /* Font size */
   --font-size-xs: 0.8rem;
   --font-size-s: 1.0rem;
   --font-size-m: 1.2rem;
@@ -14,24 +16,31 @@
   --font-size-xl: 1.6rem;
   --font-size-2xl: 2.0rem;
 
+  /* Pallete */
+  --color-white: #F0F1F;
   --color-black-100: #121212;
-  --color-black-200: #0d0d0d;
+  --color-black-200: #0D0D0D;
+  --color-black-300: #292929;
 
-  --color-white: #f0f1f;
-  --color-grey: rgba(255, 255, 255, 0.08);
+  /* Semantic colors */
+  --color-primary: #1A1A1A;
+  --color-primary-content: #FFFFFF;
+
+  --color-secondary: #5d6e9d;
+  --color-secondary-content: #f8f9fb;
 
   --color-neutral: #314157;
-  --color-neutral-content: #f9f9f9;
+  --color-neutral-content: #F9F9F9;
 
   --color-info: #2C74A0;
-  --color-info-content: #f5f8ff;
+  --color-info-content: #F5F8FF;
 
   --color-success: #297373;
-  --color-success-content: #f4fff7;
+  --color-success-content: #F4FFF7;
 
-  --color-warning: #DC3318;
-  --color-warning-content: #fffbea;
+  --color-warning: #E97E32;
+  --color-warning-content: #FFFBEA;
 
   --color-error: #DB2955;
-  --color-error-content: #fff4f3;
+  --color-error-content: #FFF4F3;
 }

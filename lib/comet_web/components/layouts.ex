@@ -114,7 +114,7 @@ defmodule CometWeb.Layouts do
     ~H"""
     <div class="sidebar drawer lg:drawer-open">
       <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
-      <div class="drawer-content bg-cm-black-100 flex flex-col">
+      <div class="drawer-content flex flex-col">
         <label for="my-drawer-2" class="btn btn-primary drawer-button lg:hidden">
           Open drawer
         </label>
@@ -124,9 +124,9 @@ defmodule CometWeb.Layouts do
       <div class="drawer-side !overflow-visible">
         <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
 
-        <div class="sidebar-menu menu bg-cm-black-200 border-r border-r-cm-grey text-base-content min-h-full w-70 p-2">
+        <div class="sidebar-menu menu bg-cm-black-200 border-r border-r-cm-black-300 text-base-content min-h-full w-70 p-2">
           <div class="navigation">
-            <div class="user-settings bg-cm-grey p-2 rounded">
+            <div class="user-settings bg-cm-black-300 p-2 rounded">
               <div class="flex gap-2">
                 <.avatar size="small" />
                 <div class="info">
@@ -177,7 +177,7 @@ defmodule CometWeb.Layouts do
     assigns = assign(assigns, %{title: title, tabs: tabs})
 
     ~H"""
-    <nav class="topbar navbar justify-between bg-cm-black-200 border-b border-b-cm-grey">
+    <nav class="topbar navbar justify-between bg-cm-black-200 border-b border-b-cm-black-300">
       <div class="navbar-start flex items-center">
         <span class="px-4 font-semibold text-xl">{@title}</span>
         <.menu :if={@tabs} class="p-0">

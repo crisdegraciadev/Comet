@@ -31,7 +31,7 @@ defmodule CometWeb.SettingsLive.ApiKey do
           type="text"
           label="API Key"
         />
-        <.button variant="primary" phx-disable-with="Saving...">Save API Key</.button>
+        <.button variant="btn-primary" phx-disable-with="Saving...">Save API Key</.button>
       </.form>
     </Layouts.settings>
     """

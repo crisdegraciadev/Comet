@@ -44,7 +44,7 @@ defmodule CometWeb.SettingsLive.Profile do
           label="Surname"
           required
         />
-        <.button variant="primary" phx-disable-with="Saving...">Save Profile</.button>
+        <.button variant="btn-primary" phx-disable-with="Saving...">Save Profile</.button>
       </.form>
     </Layouts.settings>
     """

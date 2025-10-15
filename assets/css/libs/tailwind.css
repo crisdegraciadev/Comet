@@ -11,8 +11,8 @@
   --color-cm-black-100: var(--color-black-100);
   --color-cm-black-200: var(--color-black-200);
   --color-cm-black-300: var(--color-black-300);
+
   --color-cm-white: var(--color-white);
-  --color-cm-grey: var(--color-grey);
 
   --text-cm-sm: var(--font-size-s)
   --text-cm-base: var(--font-size-m)

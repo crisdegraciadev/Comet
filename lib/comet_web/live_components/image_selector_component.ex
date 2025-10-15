@@ -48,7 +48,7 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
             aria-label="Covers"
             checked={@checked == :cover}
           />
-          <div class="tab-content border border-base-content/10 bg-base-200 p-2 rounded-box">
+          <div class="tab-content border border-base-content/10 bg-base-100 p-2 rounded-box">
             <div class="h-[500px] w-full overflow-y-auto">
               <.async_result :let={covers} assign={@covers}>
                 <:loading>
@@ -84,7 +84,7 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
             checked={@checked == :hero}
           />
 
-          <div class="tab-content border border-base-content/10 bg-base-200 p-2 rounded-box">
+          <div class="tab-content border border-base-content/10 bg-base-100 p-2 rounded-box">
             <div class="h-[500px] w-full overflow-y-auto">
               <.async_result :let={heroes} assign={@heroes}>
                 <:loading>

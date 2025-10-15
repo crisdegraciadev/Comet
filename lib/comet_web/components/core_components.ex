@@ -42,32 +42,20 @@ defmodule CometWeb.CoreComponents do
     """
   end
 
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
   attr :class, :string, default: nil
 
   attr :variant, :string,
-    values: [
-      nil,
-      "base",
-      "neutral",
-      "primary",
-      "secondary",
-      "accent",
-      "info",
-      "success",
-      "warning",
-      "error",
-      "ghost",
-      "link"
-    ],
-    default: nil
+    values:
+      ~w(btn-primary btn-secondary btn-neutral btn-accent btn-info btn-success btn-warning btn-error btn-ghost btn-link),
+    default: "btn-primary"
 
-  attr :size, :string, values: [nil, "xs", "sm", "lg", "xl"], default: nil
-  attr :icon, :string, values: [nil, "square", "circle"], default: nil
+  attr :size, :string, values: ~w(btn-xs btn-sm btn-l btn-xl)
+  attr :icon, :string, values: ~w(btn-square btn-circle)
   attr :soft, :boolean, default: false
   attr :outline, :boolean, default: false
   attr :dash, :boolean, default: false
   attr :active, :boolean, default: false
+  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
 
   slot :inner_block, required: true
 
@@ -76,9 +64,9 @@ defmodule CometWeb.CoreComponents do
       assigns
       |> assign(:class, [
         "btn shrink-1",
-        assigns[:variant] && "btn-#{assigns[:variant]}",
-        assigns[:size] && "btn-#{assigns[:size]}",
-        assigns[:icon] && "btn-#{assigns[:icon]}",
+        assigns[:variant],
+        assigns[:size],
+        assigns[:icon],
         assigns[:soft] && "btn-soft",
         assigns[:outline] && "btn-outline",
         assigns[:dash] && "btn-dash",
@@ -121,6 +109,14 @@ defmodule CometWeb.CoreComponents do
     <div role="alert" class={@class}>
       {render_slot(@inner_block)}
     </div>
+    """
+  end
+
+  attr :label, :string, default: nil
+
+  def divider(assigns) do
+    ~H"""
+    <div class="divider"><span class="text-xs text-base-content/40">{@label}</span></div>
     """
   end
 

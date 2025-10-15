@@ -284,7 +284,7 @@ defmodule CometWeb.BacklogLive.Collection do
   defp game_card(%{preferences: %{assets: :cover}} = assigns) do
     ~H"""
     <.link id={@id} navigate={~p"/backlog/collection/#{@game}"}>
-      <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-grey bg-cm-black-200 relative">
+      <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative">
         <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
           <.status_badge status={@game.status} />
           <.platform_badge platform={@game.platform} />
@@ -304,13 +304,16 @@ defmodule CometWeb.BacklogLive.Collection do
   defp game_card(%{preferences: %{assets: :hero}} = assigns) do
     ~H"""
     <.link id={@id} navigate={~p"/backlog/collection/#{@game}"}>
-      <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-grey bg-cm-black-200 relative aspect-96/31">
+      <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative aspect-96/31">
         <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
           <.status_badge status={@game.status} />
           <.platform_badge platform={@game.platform} />
         </div>
 
-        <div :if={@game.hero == nil} class="w-full h-full flex flex-col items-center justify-center bg-cm-black-100">
+        <div
+          :if={@game.hero == nil}
+          class="w-full h-full flex flex-col items-center justify-center bg-cm-black-100"
+        >
         </div>
 
         <img
@@ -341,12 +344,12 @@ defmodule CometWeb.BacklogLive.Collection do
         <.button navigate={~p"/backlog/collection/#{@game}/edit"}>
           <.icon name="lucide-pencil" /> Edit
         </.button>
-        <.button variant="error" navigate={~p"/backlog/collection/#{@game}/delete"}>
+        <.button variant="btn-error" navigate={~p"/backlog/collection/#{@game}/delete"}>
           <.icon name="lucide-trash" /> Delete
         </.button>
       </:actions>
 
-      <div class="flex flex-col gap-2 rounded-box bg-cm-black-100 border border-cm-grey  p-4">
+      <div class="flex flex-col gap-2 rounded-box bg-cm-black-100 border border-cm-black-300  p-4">
         <div class="grid grid-cols-2">
           <span><.icon name="lucide-circle-stack" class="mr-2 size-4" /> Status</span>
           <.status_badge status={@game.status} />
@@ -386,8 +389,8 @@ defmodule CometWeb.BacklogLive.Collection do
         </p>
       </div>
       <div class="flex justify-end w-full gap-2">
-        <.button variant="error" phx-click="delete" phx-value-id={@game.id}>Confirm</.button>
-        <.button navigate={~p"/backlog/collection/#{@game.id}"}>Cancel</.button>
+        <.button phx-click="delete" phx-value-id={@game.id}>Confirm</.button>
+        <.button variant="btn-error" navigate={~p"/backlog/collection/#{@game.id}"}>Cancel</.button>
       </div>
     </.game_modal>
     """
@@ -412,7 +415,7 @@ defmodule CometWeb.BacklogLive.Collection do
       backdrop_link={~p"/backlog/collection"}
     >
       <:actions>
-        <.button navigate={~p"/backlog/collection/#{@game.id}/images/edit"}>
+        <.button variant="btn-secondary" navigate={~p"/backlog/collection/#{@game.id}/images/edit"}>
           <.icon name="lucide-file-image" /> Images
         </.button>
       </:actions>
@@ -461,7 +464,7 @@ defmodule CometWeb.BacklogLive.Collection do
         />
         <div class="flex justify-end gap-2 mt-4">
           <.button type="submit" phx-disable-with="Saving...">Save</.button>
-          <.button variant="error" navigate={~p"/backlog/collection/#{@game.id}"}> Cancel</.button>
+          <.button variant="btn-error" navigate={~p"/backlog/collection/#{@game.id}"}> Cancel</.button>
         </div>
       </.form>
     </.game_modal>

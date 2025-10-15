@@ -2,12 +2,20 @@
   theme: false
 }
 
-
 @plugin "daisyui/theme" {
-  name: "custom";
+  name: "comet-dark";
   prefersdark: true;
   color-scheme: "dark";
 
+  --color-base-100: var(--color-black-100);
+  --color-base-200: var(--color-black-200);
+  --color-base-300: var(--color-black-300);
+
+  --color-primary: var(--color-primary);
+  --color-primary-content: var(--color-primary-content);
+
+  --color-secondary: var(--color-secondary);
+  --color-secondary-content: var(--color-secondary-content);
 
   --color-neutral: var(--color-neutral);
   --color-neutral-content: var(--color-neutral-content);
@@ -23,9 +31,6 @@
 
   --color-error: var(--color-error);
   --color-error-content: var(--color-error-content);
-
-  --menu-active-bg: var(--color-grey);
-
 
   --radius-selector: 0.25rem;
   --radius-field: 0.25rem;

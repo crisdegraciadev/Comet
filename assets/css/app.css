@@ -6,6 +6,7 @@
 @import "./core/utils.css";
 @import "./core/vars.css";
 
+@import "./components/button.css";
 @import "./components/game-cover.css";
 @import "./components/menu.css";
 @import "./components/sidebar.css";

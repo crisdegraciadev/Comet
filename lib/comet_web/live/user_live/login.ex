@@ -7,20 +7,7 @@ defmodule CometWeb.UserLive.Login do
     <Layouts.login flash={@flash} current_scope={@current_scope}>
       <div class="mx-auto max-w-sm space-y-4">
         <div class="text-center">
-          <.header>
-            <p>Log in</p>
-            <:subtitle>
-              <%= if @current_scope do %>
-                You need to reauthenticate to perform sensitive actions on your account.
-              <% else %>
-                Don't have an account? <.link
-                  navigate={~p"/users/register"}
-                  class="font-semibold text-brand hover:underline"
-                  phx-no-format
-                >Sign up</.link> for an account now.
-              <% end %>
-            </:subtitle>
-          </.header>
+          <h1 class="font-bold text-2xl">Login</h1>
         </div>
 
         <.form
@@ -45,12 +32,15 @@ defmodule CometWeb.UserLive.Login do
             label="Password"
             autocomplete="current-password"
           />
-          <.button class="w-full" variant="primary" name={@form[:remember_me].name} value="true">
-            Log in and stay logged in <span aria-hidden="true">→</span>
-          </.button>
-          <.button variant="primary" soft={true} class="w-full mt-2">
-            Log in only this time
-          </.button>
+          <div class="flex flex-col gap-2 mt-4">
+            <.button class="w-full" name={@form[:remember_me].name} value="true">
+              Log in
+            </.button>
+            <.divider label="Don't you have an account?" />
+            <.button class="w-full" navigate={~p"/users/register"}>
+              Register
+            </.button>
+          </div>
         </.form>
       </div>
     </Layouts.login>

@@ -26,7 +26,7 @@ defmodule CometWeb.LiveComponents.SGDBGameCardComponent do
   def render(assigns) do
     ~H"""
     <div class="cursor-pointer">
-      <div class="rounded-md flex flex-col gap-2 game-cover-shadow bg-cm-black-200 border border-cm-grey aspect-2/3">
+      <div class="rounded-md flex flex-col gap-2 game-cover-shadow bg-cm-black-200 border border-cm-black-300 aspect-2/3">
         <.async_result :let={covers} assign={@covers}>
           <:loading>
             <.skeleton width="h-full" height="h-full" />
