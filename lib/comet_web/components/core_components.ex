@@ -86,7 +86,11 @@ defmodule CometWeb.CoreComponents do
   end
 
   attr :class, :string, default: nil
-  attr :color, :string, values: [nil, "info", "success", "warning", "error"], default: nil
+
+  attr :color, :string,
+    values: ~w(alert-info alert-success alert-warning alert-error),
+    default: "alert-info"
+
   attr :soft, :boolean, default: false
   attr :outline, :boolean, default: false
   attr :dash, :boolean, default: false
@@ -98,7 +102,7 @@ defmodule CometWeb.CoreComponents do
       assigns
       |> assign(:class, [
         "alert",
-        assigns[:color] && "alert-#{assigns[:color]}",
+        assigns[:color],
         assigns[:soft] && "alert-soft",
         assigns[:outline] && "alet-outline",
         assigns[:dash] && "alet-dash",

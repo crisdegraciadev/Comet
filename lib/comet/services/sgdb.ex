@@ -4,12 +4,23 @@ defmodule Comet.Services.SGDB do
   Documentation: https://www.steamgriddb.com/api/v2
   """
 
+  alias Comet.Cache
+
   @api_v2 "https://www.steamgriddb.com/api/v2"
   @public_api "https://www.steamgriddb.com/api/public"
 
   def search(term, _) when byte_size(term) == 0, do: {:error, "Empty search term"}
 
   def search(term) do
+    case Cache.get(search_key(term)) do
+      nil -> sgdb_search(term)
+      value -> {:ok, value}
+    end
+  end
+
+  defp sgdb_search(term) do
+    IO.inspect("REMOTE SEARCHING")
+
     base_json = %{
       asset_type: "grid",
       term: term,
@@ -24,30 +35,50 @@ defmodule Comet.Services.SGDB do
         end
       end)
 
-    case Enum.find(results, &match?({:error, _}, &1)) do
-      {:error, reason} -> {:error, reason}
-      _ -> {:ok, results |> Enum.concat() |> Enum.sort_by(& &1.score, :desc)}
-    end
+    ordered_results =
+      case Enum.find(results, &match?({:error, _}, &1)) do
+        {:error, reason} ->
+          {:error, reason}
+
+        _ ->
+          {:ok,
+           results
+           |> Enum.concat()
+           |> Enum.sort_by(& &1.score, :desc)
+           |> tap(fn ordered_results -> Cache.put(search_key(term), ordered_results) end)}
+      end
+
+    ordered_results
   end
 
   def get_game(id, api_key) do
-    case Req.get(game_url(id), options(api_key)) do
-      {:ok, %{body: %{"data" => []}}} -> {:error, "No game found"}
-      {:ok, %{body: %{"data" => data}}} -> {:ok, %{game: parse_game(data)}}
-      {:error, reason} -> {:error, reason}
+    case Cache.get(game_key(id)) do
+      nil -> fetch(game_key(id), game_url(id), :game, api_key, &parse_game/1)
+      value -> {:ok, %{game: value}}
     end
   end
 
   def get_covers(id, api_key) do
-    case Req.get(cover_url(id), options(api_key)) do
-      {:ok, %{body: %{"data" => data}}} -> {:ok, %{covers: parse_covers(data)}}
-      {:error, reason} -> {:error, reason}
+    case Cache.get(covers_key(id)) do
+      nil -> fetch(covers_key(id), cover_url(id), :covers, api_key, &parse_covers/1)
+      value -> {:ok, %{covers: value}}
     end
   end
 
   def get_heroes(id, api_key) do
-    case Req.get(hero_url(id), options(api_key)) do
-      {:ok, %{body: %{"data" => data}}} -> {:ok, %{heroes: parse_heroes(data)}}
+    case Cache.get(heroes_key(id)) do
+      nil -> fetch(heroes_key(id), hero_url(id), :heroes, api_key, &parse_heroes/1)
+      value -> {:ok, %{heroes: value}}
+    end
+  end
+
+  defp fetch(key, url, resp_key, api_key, parser) do
+    with {:ok, %{body: %{"data" => data}}} <- Req.get(url, options(api_key)),
+         parsed <- parser.(data) do
+      Cache.put(key, parsed)
+      {:ok, Map.put(%{}, resp_key, parsed)}
+    else
+      {:ok, %{body: %{"data" => []}}} -> {:error, "No data found"}
       {:error, reason} -> {:error, reason}
     end
   end
@@ -63,6 +94,11 @@ defmodule Comet.Services.SGDB do
   defp game_url(id), do: "#{@api_v2}/games/id/#{id}"
   defp cover_url(id), do: "#{@api_v2}/grids/game/#{id}?dimensions=600x900"
   defp hero_url(id), do: "#{@api_v2}/heroes/game/#{id}?dimensions=1920x620"
+
+  defp search_key(term), do: "search_#{term}"
+  defp game_key(id), do: "game_#{id}"
+  defp covers_key(id), do: "covers_#{id}"
+  defp heroes_key(id), do: "heroes_#{id}"
 
   defp parse_game(game, meta \\ %{"total" => 0}),
     do: %{id: game["id"], name: game["name"], score: meta["total"]}

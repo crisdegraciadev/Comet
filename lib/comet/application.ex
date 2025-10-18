@@ -10,6 +10,7 @@ defmodule Comet.Application do
     children = [
       CometWeb.Telemetry,
       Comet.Repo,
+      Comet.Cache,
       {DNSCluster, query: Application.get_env(:comet, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Comet.PubSub},
       # Start a worker by calling: Comet.Worker.start_link(arg)

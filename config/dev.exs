@@ -1,14 +1,19 @@
 import Config
 
-# Configure your database
+# PostrgeSQL repo config 
+
+# config :comet, Comet.Repo,
+#   username: "postgres",
+#   password: "postgres",
+#   hostname: "localhost",
+#   database: "comet_dev",
+#   port: 5437,
+#   stacktrace: true,
+#   show_sensitive_data_on_connection_error: true,
+#   pool_size: 10
+
 config :comet, Comet.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "comet_dev",
-  port: 5437,
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
+  database: Path.expand("../database/comet_dev.sqlite3", __DIR__),
   pool_size: 10
 
 # For development, we disable any cache and enable

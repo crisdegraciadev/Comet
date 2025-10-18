@@ -17,7 +17,12 @@ defmodule CometWeb.BrowserLive.Collection do
       current_module={["browser", "collection"]}
     >
       <.search_form api_key={@api_key} query={assigns[:query]} />
-      <.search_results api_key={@api_key} results={assigns[:results]} query={assigns[:query]} />
+      <.search_results
+        :if={@api_key}
+        api_key={@api_key}
+        results={assigns[:results]}
+        query={assigns[:query]}
+      />
 
       <.add_game_modal
         :if={@live_action == :new}
@@ -85,6 +90,19 @@ defmodule CometWeb.BrowserLive.Collection do
   attr :api_key, :string, default: nil
   attr :query, :string, default: ""
 
+  defp search_form(assigns = %{api_key: nil}) do
+    ~H"""
+    <.alert :if={!@api_key} color="alert-warning">
+      <.icon name="lucide-info" />
+      <span>
+        You need to configure your SteamGridDB API key in
+        <.link href={~p"/settings/api_key"} class="link">Settings</.link>
+        to search for games.
+      </span>
+    </.alert>
+    """
+  end
+
   defp search_form(assigns) do
     assigns = assign(assigns, :form, to_form(%{"query" => assigns.query}))
 
@@ -108,15 +126,6 @@ defmodule CometWeb.BrowserLive.Collection do
           <.icon name="lucide-search" /> Search
         </.button>
       </.form>
-
-      <.alert :if={!@api_key} color="warning">
-        <.icon name="lucide-info" />
-        <span>
-          You need to configure your SteamGridDB API key in
-          <.link href={~p"/settings/api_key"} class="link link-primary">Settings</.link>
-          to search for games.
-        </span>
-      </.alert>
     </div>
     """
   end
