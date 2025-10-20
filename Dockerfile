@@ -1,4 +1,3 @@
-
 ARG ELIXIR_VERSION=1.18.4
 ARG OTP_VERSION=28.0.2
 ARG DEBIAN_VERSION=bookworm-20250929-slim
@@ -12,11 +11,9 @@ FROM ${BUILDER_IMAGE} AS builder
 RUN apt-get update \
   && apt-get install -y --no-install-recommends build-essential git curl \
   && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-  && apt-get install -y nodejs \
+  && apt-get install -y nodejs sqlite3 \
   && rm -rf /var/lib/apt/lists/*
 
-
-# prepare build dir
 WORKDIR /app
 
 # install hex + rebar
@@ -32,8 +29,6 @@ RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
 
 # copy compile-time config files before we compile dependencies
-# to ensure any relevant config change will trigger the dependencies
-# to be re-compiled.
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
@@ -47,7 +42,6 @@ RUN mix compile
 
 COPY assets assets
 
-
 # compile assets
 RUN npm ci --prefix ./assets
 RUN mix assets.deploy
@@ -58,12 +52,11 @@ COPY config/runtime.exs config/
 COPY rel rel
 RUN mix release
 
-# start a new build stage so that the final image will only contain
-# the compiled release and other runtime necessities
+# --- FINAL IMAGE ---
 FROM ${RUNNER_IMAGE} AS final
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses5 locales ca-certificates \
+  && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses5 locales ca-certificates sqlite3 \
   && rm -rf /var/lib/apt/lists/*
 
 # Set the locale
@@ -75,19 +68,13 @@ ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
 WORKDIR "/app"
-RUN chown nobody /app
 
-# set runner ENV
+# Create a writable folder for SQLite database
+RUN mkdir -p /app/database && chown nobody /app/database
+
+# Set runner ENV
 ENV MIX_ENV="prod"
+ENV SQLITE_DB_PATH="/app/database/comet_prod.sqlite3"
 
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/comet ./
-
-USER nobody
-
-# If using an environment that doesn't automatically reap zombie processes, it is
-# advised to add an init process such as tini via `apt-get install`
-# above and adding an entrypoint. See https://github.com/krallin/tini for details
-# ENTRYPOINT ["/tini", "--"]
-
-CMD ["/bin/sh", "-c", "/app/bin/comet"]

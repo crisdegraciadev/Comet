@@ -5,17 +5,15 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
-  database_path =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
-
   config :comet, Comet.Repo,
-    # ssl: true,
-    database: database_path,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
+    database: System.get_env("SQLITE_DB_PATH") || "/app/database/comet_prod.sqlite3",
+    pool_size: 5,
+    # Enables concurrent reads while writing
+    journal_mode: :wal,
+    # Wait up to 10s before giving up on a lock
+    busy_timeout: 10_000,
+    # Optional: improves WAL performance
+    cache_size: -64000
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you

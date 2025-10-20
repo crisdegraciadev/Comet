@@ -1,40 +1,16 @@
 services:
-  dev_db:
-    image: postgres:latest
-    restart: always
+  app:
+    image: crisdegraciadev/comet:latest
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: comet_dev
-    volumes:
-      - dev_db_data:/var/lib/postgresql/data
+      PHX_SERVER: "true"
+      PHX_HOST: "localhost"
+      SECRET_KEY_BASE: "dKhseTrfL/BGZosW4sPMM9EoG+Be0IRf+mrMlaolAStkJN4O9OrubatPZ0eV5I86"
     ports:
-      - "5437:5432"
+      - "4001:4000"
+    networks:
+      - comet_net
+    command: /bin/sh -c "/app/bin/comet eval 'Comet.Release.migrate' && /app/bin/comet start"
 
-  test_db:
-    image: postgres:latest
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: comet_test
-    volumes:
-      - test_db_data:/var/lib/postgresql/data
-    ports:
-      - "5438:5432"
 
-  pgadmin:
-    image: dpage/pgadmin4
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5052:80"
-    depends_on:
-      - dev_db
-      - test_db
-
-volumes:
-  dev_db_data:
-  test_db_data:
+networks:
+  comet_net:
