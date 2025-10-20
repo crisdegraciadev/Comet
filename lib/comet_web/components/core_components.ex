@@ -117,10 +117,13 @@ defmodule CometWeb.CoreComponents do
   end
 
   attr :label, :string, default: nil
+  attr :class, :string, default: nil
 
   def divider(assigns) do
     ~H"""
-    <div class="divider"><span :if={@label} class="text-xs text-base-content/40">{@label}</span></div>
+    <div class={["divider", @class]}>
+      <span :if={@label} class="text-xs text-base-content/40">{@label}</span>
+    </div>
     """
   end
 
@@ -319,6 +322,7 @@ defmodule CometWeb.CoreComponents do
 
   attr :orientation, :string, default: "menu-horizontal"
   attr :class, :string, default: nil
+  attr :title, :string, default: nil
 
   slot :item do
     attr :label, :string
@@ -329,7 +333,8 @@ defmodule CometWeb.CoreComponents do
 
   def menu(assigns) do
     ~H"""
-    <ul class={["menu gap-1 !mt-2", @orientation, @class]}>
+    <ul class={["menu gap-1", @orientation, @class]}>
+      <li :if={@title} class="menu-title">{@title}</li>
       <li :for={item <- @item}>
         <.link class={[item.active && "menu-active"]} navigate={item.href}>
           <.icon :if={item[:icon]} name={item.icon} /> {item.label}

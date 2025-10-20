@@ -126,11 +126,17 @@ defmodule CometWeb.Layouts do
 
         <div class="sidebar-menu menu bg-cm-black-200 border-r border-r-cm-black-300 text-base-content min-h-full w-70 p-2">
           <div class="navigation">
-            <div class="flex justify-center gap-2 p-2 px-4">
-              <.icon name="lucide-flask-conical" size="size-8" />
+            <div class="flex justify-start gap-2 p-2 px-4 rounded-md hover:bg-base-300">
+              <div class="bg-secondary rounded-md p-1">
+                <.icon name="lucide-flask-conical" size="size-8" />
+              </div>
+              <div class="flex flex-col">
+                <span class="font-bold text-base">Comet</span>
+                <span class="text-xs text-base-content/40">Beta 0.0.1</span>
+              </div>
             </div>
 
-            <ul class="p-2 !mt-0 text-cm-white text-cm-s min-h-full w-full">
+            <ul class="px-2 text-cm-white text-cm-s min-h-full w-full">
               <.menu orientation="menu-vertical" class="p-0 w-full">
                 <:item
                   :for={{label, path, icon} <- @top_menu}
