@@ -126,16 +126,8 @@ defmodule CometWeb.Layouts do
 
         <div class="sidebar-menu menu bg-cm-black-200 border-r border-r-cm-black-300 text-base-content min-h-full w-70 p-2">
           <div class="navigation">
-            <div class="user-settings bg-cm-black-300 p-2 rounded">
-              <div class="flex gap-2">
-                <.avatar size="small" />
-                <div class="info">
-                  <span class="font-medium">Joseph</span>
-                  <span class="text-xs font-light text-base-content/50">
-                    {@current_scope.user.email}
-                  </span>
-                </div>
-              </div>
+            <div class="flex justify-center gap-2 p-2 px-4">
+              <.icon name="lucide-flask-conical" size="size-8" />
             </div>
 
             <ul class="p-2 !mt-0 text-cm-white text-cm-s min-h-full w-full">

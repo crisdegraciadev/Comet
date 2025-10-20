@@ -120,7 +120,7 @@ defmodule CometWeb.CoreComponents do
 
   def divider(assigns) do
     ~H"""
-    <div class="divider"><span class="text-xs text-base-content/40">{@label}</span></div>
+    <div class="divider"><span :if={@label} class="text-xs text-base-content/40">{@label}</span></div>
     """
   end
 
@@ -225,7 +225,7 @@ defmodule CometWeb.CoreComponents do
   end
 
   attr :size, :string, values: ~w(large medium small), default: "medium"
-  attr :email, :string, default: "joseph@email.com"
+  attr :email, :string, default: "comet@email.com"
 
   def avatar(assigns) do
     {wrapper_size, text_size} =

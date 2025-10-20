@@ -26,7 +26,7 @@ defmodule CometWeb.CustomComponents do
         </div>
 
         <div class="flex flex-col gap-4 mx-6">
-          <div class="flex justify-between">
+          <div class="flex gap-2 justify-between">
             <h1 class="font-semibold text-4xl">
               {@game.name}
             </h1>
