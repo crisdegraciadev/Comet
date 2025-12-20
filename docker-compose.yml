@@ -1,28 +1,27 @@
 services:
-  db:
+  dev_db:
     image: postgres:15
-    container_name: tu_app_db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: comet-dev
+      POSTGRES_DB: comet_dev
+    volumes:
+      - dev_db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
 
   pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: tu_app_pgadmin
+    image: dpage/pgadmin4
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
-      - "8080:80"
+      - "5052:80"
     depends_on:
-      - db
+      - dev_db
 
 volumes:
-  db_data:
+  dev_db_data:
+  test_db_data:

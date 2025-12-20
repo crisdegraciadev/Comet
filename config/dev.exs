@@ -2,21 +2,13 @@ import Config
 
 # PostrgeSQL repo config 
 
-# config :comet, Comet.Repo,
-#   username: "postgres",
-#   password: "postgres",
-#   hostname: "localhost",
-#   database: "comet_dev",
-#   port: 5437,
-#   stacktrace: true,
-#   show_sensitive_data_on_connection_error: true,
-#   pool_size: 10
-
 config :comet, Comet.Repo,
   username: "postgres",
   password: "postgres",
-  database: "comet-dev",
   hostname: "localhost",
+  database: "comet_dev",
+  port: 5432,
+  stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
