@@ -4,7 +4,7 @@ defmodule Comet.Accounts.Preferences do
 
   schema "accounts_preferences" do
     field :cols, :integer
-    field :name, :boolean, default: false
+    field :show_name, :boolean, default: false
     field :assets, Ecto.Enum, values: [:cover, :hero, :logo]
     field :user_id, :id
 
@@ -14,8 +14,8 @@ defmodule Comet.Accounts.Preferences do
   @doc false
   def changeset(preferences, attrs, user_scope) do
     preferences
-    |> cast(attrs, [:cols, :name, :assets])
-    |> validate_required([:cols, :name, :assets])
+    |> cast(attrs, [:cols, :show_name, :assets])
+    |> validate_required([:cols, :show_name, :assets])
     |> put_change(:user_id, user_scope.user.id)
   end
 end

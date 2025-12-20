@@ -1,10 +1,10 @@
 defmodule Comet.Games.Game.Query do
   import Ecto.Query
-  alias Comet.Repo
-  alias Comet.Games.Game
   alias Comet.Accounts.User
+  alias Comet.Games.Game
+  alias Comet.Repo
 
-  def all(), do: Repo.all(Game)
+  def all, do: Repo.all(Game)
 
   def all(%User{id: user_id}, filter \\ %{}) do
     Game
@@ -22,16 +22,19 @@ defmodule Comet.Games.Game.Query do
   defp with_status(query, status) when status in ~w(completed in_progress pending) do
     where(query, [g], g.status == ^status)
   end
+
   defp with_status(query, _), do: query
 
   defp search_by(query, value) when value in ["", nil], do: query
+
   defp search_by(query, value) do
-    where(query, [g], ilike(g.name, ^"%#{value}%"))
+    where(query, [g], like(g.name, ^"%#{value}%"))
   end
 
   defp with_platform(query, platform) when platform in ~w(pc ps1 ps2 ps3 ps4 ps5 psp switch) do
     where(query, [g], g.platform == ^platform)
   end
+
   defp with_platform(query, _), do: query
 
   def get!(%User{id: user_id}, id) when is_integer(id) do
@@ -41,5 +44,4 @@ defmodule Comet.Games.Game.Query do
   end
 
   def get!(%User{} = user, id) when is_binary(id), do: get!(user, String.to_integer(id))
-
 end

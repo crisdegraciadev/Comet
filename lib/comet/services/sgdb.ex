@@ -19,8 +19,6 @@ defmodule Comet.Services.SGDB do
   end
 
   defp sgdb_search(term) do
-    IO.inspect("REMOTE SEARCHING")
-
     base_json = %{
       asset_type: "grid",
       term: term,

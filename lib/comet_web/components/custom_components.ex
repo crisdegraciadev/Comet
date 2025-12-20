@@ -40,7 +40,7 @@ defmodule CometWeb.CustomComponents do
         </div>
       </div>
 
-      <.link :if={assigns[:backdrop_link]} class="modal-backdrop" navigate={@backdrop_link}></.link>
+      <.link :if={assigns[:backdrop_link]} class="modal-backdrop" patch={@backdrop_link}></.link>
     </dialog>
     """
   end

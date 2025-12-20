@@ -6,11 +6,23 @@ import { hooks as colocatedHooks } from "phoenix-colocated/comet";
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
 
+let Hooks = {};
+
+Hooks.PreserveScroll = {
+  mounted() {
+    window.scrollTo(0, this.scrollY);
+  },
+  destroyed() {
+    this.scrollY = window.scrollY;
+  },
+};
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
-  hooks: { 
-    ...colocatedHooks
+  hooks: {
+    ...Hooks,
+    ...colocatedHooks,
   },
 });
 

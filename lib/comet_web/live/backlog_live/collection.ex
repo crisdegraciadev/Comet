@@ -1,9 +1,9 @@
 defmodule CometWeb.BacklogLive.Collection do
   use CometWeb, :live_view
 
+  alias Comet.Accounts.Preferences
   alias Comet.Games
   alias Comet.Games.Game
-  alias Comet.Accounts.Preferences
   alias Comet.Services.Constants
   alias CometWeb.LiveComponents.ImageSelectorComponent
 
@@ -17,65 +17,59 @@ defmodule CometWeb.BacklogLive.Collection do
       current_scope={@current_scope}
       current_module={["backlog", "collection"]}
     >
-      <div class="flex justify-between">
-        <.filters />
-        <.display_options preferences={@preferences} />
+      <div id="backlog-page" phx-hook="PreserveScroll">
+        <div class="flex justify-between">
+          <.filters />
+          <.display_options preferences={@preferences} />
+        </div>
+
+        <.game_list streams={@streams} preferences={@preferences} />
+
+        <.show_game_modal :if={@live_action == :show} game={@game} />
+        <.delete_game_modal :if={@live_action == :delete} game={@game} />
+        <.edit_game_modal :if={@live_action == :edit} game={@game} current_scope={@current_scope} />
+
+        <.live_component
+          :if={@live_action == :images_edit}
+          module={ImageSelectorComponent}
+          id={"images-selector-#{@game.id}"}
+          game={@game}
+          current_scope={@current_scope}
+        />
       </div>
-
-      <.game_list streams={@streams} preferences={@preferences} />
-
-      <.show_game_modal :if={@live_action == :show} game={@game} />
-      <.delete_game_modal :if={@live_action == :delete} game={@game} />
-      <.edit_game_modal :if={@live_action == :edit} game={@game} current_scope={@current_scope} />
-
-      <.live_component
-        :if={@live_action == :images_edit}
-        module={ImageSelectorComponent}
-        id={"images-selector-#{@game.id}"}
-        game={@game}
-        current_scope={@current_scope}
-      />
     </Layouts.app>
     """
   end
 
   @impl true
-  def mount(
-        %{"id" => id},
-        _session,
-        %{assigns: %{live_action: live_action, current_scope: %{user: user}}} = socket
-      )
-      when live_action != :list do
+  def mount(_params, _session, %{assigns: %{current_scope: %{user: user}}} = socket) do
     user = Comet.Repo.preload(user, :profile)
     preferences = Preferences.Query.get!(user)
-    game = Game.Query.get!(user, String.to_integer(id))
 
     socket =
       socket
-      |> stream(:game_list, Game.Query.all(user))
       |> assign(:current_scope, %{user: user})
       |> assign(:preferences, preferences)
-      |> assign(:game, game)
+      |> stream(:game_list, Game.Query.all(user))
 
     {:ok, socket}
   end
 
   @impl true
-  def mount(
-        _params,
-        _session,
-        %{assigns: %{live_action: :list, current_scope: %{user: user}}} = socket
-      ) do
-    user = Comet.Repo.preload(user, :profile)
-    preferences = Preferences.Query.get!(user)
+  def handle_params(_params, _url, %{assigns: %{live_action: :list}} = socket) do
+    {:noreply, assign(socket, :game, nil)}
+  end
 
-    socket =
-      socket
-      |> stream(:game_list, Game.Query.all(user))
-      |> assign(:current_scope, %{user: user})
-      |> assign(:preferences, preferences)
+  @impl true
+  def handle_params(
+        %{"id" => id},
+        _url,
+        %{assigns: %{live_action: live_action, current_scope: %{user: user}}} = socket
+      )
+      when live_action in [:show, :edit, :delete, :images_edit] do
+    game = Game.Query.get!(user, String.to_integer(id))
 
-    {:ok, socket}
+    {:noreply, assign(socket, :game, game)}
   end
 
   @impl true
@@ -113,7 +107,7 @@ defmodule CometWeb.BacklogLive.Collection do
       socket
       |> stream_delete(:game_list, game)
       |> put_flash(:info, "Game deleted")
-      |> push_navigate(to: ~p"/backlog/collection", replace: true)
+      |> push_patch(to: ~p"/backlog/collection", replace: true)
 
     {:noreply, socket}
   end
@@ -130,7 +124,7 @@ defmodule CometWeb.BacklogLive.Collection do
       socket
       |> assign(:game, updated_game)
       |> put_flash(:info, "Game updated!")
-      |> push_navigate(to: ~p"/backlog/collection/#{updated_game.id}", replace: true)
+      |> push_patch(to: ~p"/backlog/collection/#{updated_game.id}", replace: true)
 
     {:noreply, socket}
   end
@@ -191,20 +185,20 @@ defmodule CometWeb.BacklogLive.Collection do
     form =
       to_form(%{
         "cols" => preferences.cols,
-        "name" => preferences.name,
+        "show_name" => preferences.show_name,
         "assets" => preferences.assets
       })
 
     cols = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     assets = [{"Cover", :cover}, {"Hero", :hero}]
-    name = [{"Yes", true}, {"No", false}]
+    show_name = [{"Yes", true}, {"No", false}]
 
     assigns =
       assign(assigns, %{
         form: form,
         cols: cols,
         assets: assets,
-        name: name
+        show_name: show_name
       })
 
     ~H"""
@@ -233,12 +227,12 @@ defmodule CometWeb.BacklogLive.Collection do
       />
 
       <.input
-        field={@form[:name]}
+        field={@form[:show_name]}
         label_wrapper_class="select"
         label_span_class="!mb-0"
         type="select"
         label="Name"
-        options={@name}
+        options={@show_name}
       />
     </.form>
     """
@@ -283,7 +277,7 @@ defmodule CometWeb.BacklogLive.Collection do
 
   defp game_card(%{preferences: %{assets: :cover}} = assigns) do
     ~H"""
-    <.link id={@id} navigate={~p"/backlog/collection/#{@game}"}>
+    <.link id={@id} patch={~p"/backlog/collection/#{@game}"}>
       <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative">
         <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
           <.status_badge status={@game.status} />
@@ -292,7 +286,7 @@ defmodule CometWeb.BacklogLive.Collection do
         <img class="aspect-2/3 rounded-tl-md rounded-tr-md" src={@game.cover} />
         <span class={[
           "font-semibold text-sm truncate px-2 text-center pb-2",
-          !@preferences.name && "!hidden"
+          !@preferences.show_name && "!hidden"
         ]}>
           {@game.name}
         </span>
@@ -303,7 +297,7 @@ defmodule CometWeb.BacklogLive.Collection do
 
   defp game_card(%{preferences: %{assets: :hero}} = assigns) do
     ~H"""
-    <.link id={@id} navigate={~p"/backlog/collection/#{@game}"}>
+    <.link id={@id} patch={~p"/backlog/collection/#{@game}"}>
       <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative aspect-96/31">
         <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
           <.status_badge status={@game.status} />
@@ -317,12 +311,12 @@ defmodule CometWeb.BacklogLive.Collection do
         </div>
 
         <img
-          class="rounded-tl-md rounded-tr-md brightness-50"
+          class="rounded-tl-md rounded-tr-md"
           src={@game.hero}
         />
         <span class={[
           "font-semibold text-sm truncate px-2 text-center pb-2",
-          !@preferences.name && "!hidden"
+          !@preferences.show_name && "!hidden"
         ]}>
           {@game.name}
         </span>
@@ -341,10 +335,10 @@ defmodule CometWeb.BacklogLive.Collection do
       backdrop_link={~p"/backlog/collection"}
     >
       <:actions>
-        <.button navigate={~p"/backlog/collection/#{@game}/edit"}>
+        <.button patch={~p"/backlog/collection/#{@game}/edit"}>
           <.icon name="lucide-pencil" /> Edit
         </.button>
-        <.button variant="btn-error" navigate={~p"/backlog/collection/#{@game}/delete"}>
+        <.button variant="btn-error" patch={~p"/backlog/collection/#{@game}/delete"}>
           <.icon name="lucide-trash" /> Delete
         </.button>
       </:actions>
@@ -390,7 +384,7 @@ defmodule CometWeb.BacklogLive.Collection do
       </div>
       <div class="flex justify-end w-full gap-2">
         <.button phx-click="delete" phx-value-id={@game.id}>Confirm</.button>
-        <.button variant="btn-error" navigate={~p"/backlog/collection/#{@game.id}"}>Cancel</.button>
+        <.button variant="btn-error" patch={~p"/backlog/collection/#{@game.id}"}>Cancel</.button>
       </div>
     </.game_modal>
     """
@@ -415,7 +409,7 @@ defmodule CometWeb.BacklogLive.Collection do
       backdrop_link={~p"/backlog/collection"}
     >
       <:actions>
-        <.button variant="btn-secondary" navigate={~p"/backlog/collection/#{@game.id}/images/edit"}>
+        <.button variant="btn-secondary" patch={~p"/backlog/collection/#{@game.id}/images/edit"}>
           <.icon name="lucide-file-image" /> Images
         </.button>
       </:actions>
@@ -464,7 +458,9 @@ defmodule CometWeb.BacklogLive.Collection do
         />
         <div class="flex justify-end gap-2 mt-4">
           <.button type="submit" phx-disable-with="Saving...">Save</.button>
-          <.button variant="btn-error" navigate={~p"/backlog/collection/#{@game.id}"}> Cancel</.button>
+          <.button variant="btn-error" patch={~p"/backlog/collection/#{@game.id}"}>
+            Cancel
+          </.button>
         </div>
       </.form>
     </.game_modal>

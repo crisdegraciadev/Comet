@@ -12,6 +12,6 @@ defmodule Comet.Accounts.Preferences.Command do
   end
 
   def create(%User{} = user, attrs) do
-    %Preferences{cols: 8, assets: :cover, name: true} |> change(user, attrs) |> Repo.insert()
+    %Preferences{cols: 8, assets: :cover, show_name: true} |> change(user, attrs) |> Repo.insert()
   end
 end

@@ -1,9 +1,9 @@
 defmodule Comet.Accounts.Preferences.Query do
   import Ecto.Query
 
-  alias Comet.Repo
   alias Comet.Accounts.Preferences
   alias Comet.Accounts.User
+  alias Comet.Repo
 
   def get!(%User{id: user_id}) do
     Preferences
