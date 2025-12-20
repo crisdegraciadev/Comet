@@ -3,7 +3,7 @@ defmodule Comet.Repo.Migrations.CreateUsersAuthTables do
 
   def change do
     create table(:users) do
-      add :email, :citext, null: false
+      add :email, :string, null: false
       add :hashed_password, :string
       add :confirmed_at, :utc_datetime
 

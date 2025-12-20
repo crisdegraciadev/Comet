@@ -28,7 +28,7 @@ defmodule Comet.Games.Game.Query do
   defp search_by(query, value) when value in ["", nil], do: query
 
   defp search_by(query, value) do
-    where(query, [g], like(g.name, ^"%#{value}%"))
+    where(query, [g], ilike(g.name, ^"%#{value}%"))
   end
 
   defp with_platform(query, platform) when platform in ~w(pc ps1 ps2 ps3 ps4 ps5 psp switch) do

@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: comet_prod
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - comet_net
+
+  app:
+    image: comet:latest
+    depends_on:
+      - db
+    environment:
+      MIX_ENV: prod
+      PHX_SERVER: "true"
+      PHX_HOST: "localhost"
+      SECRET_KEY_BASE: "dKhseTrfL/BGZosW4sPMM9EoG+Be0IRf+mrMlaolAStkJN4O9OrubatPZ0eV5I86"
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASS: postgres
+      DATABASE_URL: "ecto://postgres:postgres@db:5432/comet_prod"
+      PORT: "4000"
+    restart: always
+    ports:
+      - "4001:4000"
+    networks:
+      - comet_net
+    command: /bin/sh -c "/app/bin/comet eval 'Comet.Release.migrate' && /app/bin/comet start"
+
+volumes:
+  db_data:
+
+networks:
+  comet_net:

@@ -13,7 +13,11 @@ import Config
 #   pool_size: 10
 
 config :comet, Comet.Repo,
-  database: Path.expand("../database/comet_dev.sqlite3", __DIR__),
+  username: "postgres",
+  password: "postgres",
+  database: "comet-dev",
+  hostname: "localhost",
+  show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
 # For development, we disable any cache and enable
