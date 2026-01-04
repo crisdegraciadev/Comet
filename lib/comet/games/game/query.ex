@@ -12,6 +12,7 @@ defmodule Comet.Games.Game.Query do
     |> with_status(filter["status"])
     |> with_platform(filter["platform"])
     |> search_by(filter["name"])
+    |> with_order(filter["sort"], filter["order"])
     |> Repo.all()
   end
 
@@ -36,6 +37,15 @@ defmodule Comet.Games.Game.Query do
   end
 
   defp with_platform(query, _), do: query
+
+  defp with_order(query, sort, order) when order in ~w(asc desc) do
+    field_atom = String.to_existing_atom(sort)
+    direction = String.to_atom(order)
+
+    order_by(query, [g], [{^direction, field(g, ^field_atom)}])
+  end
+
+  defp with_order(query, _, _), do: query
 
   def get!(%User{id: user_id}, id) when is_integer(id) do
     Game

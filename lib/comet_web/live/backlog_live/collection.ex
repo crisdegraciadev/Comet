@@ -18,14 +18,7 @@ defmodule CometWeb.BacklogLive.Collection do
       current_module={["backlog", "collection"]}
     >
       <div id="backlog-page" class="flex flex-col gap-2" phx-hook="PreserveScroll">
-        <div class="flex gap-2">
-          <.button
-            variant="btn-secondary"
-            icon="btn-square"
-            patch={~p"/backlog/collection/display/options"}
-          >
-            <.icon name="lucide-layout-dashboard" />
-          </.button>
+        <div class="flex justify-between gap-2">
           <.filters />
         </div>
 
@@ -144,31 +137,82 @@ defmodule CometWeb.BacklogLive.Collection do
   end
 
   defp filters(assigns) do
-    form = to_form(%{"name" => "", "platform" => "", "status" => ""})
+    form =
+      to_form(%{
+        "name" => "",
+        "platform" => "",
+        "status" => "",
+        "group" => "",
+        "sort" => "status",
+        "order" => "asc"
+      })
 
     assigns =
       assign(assigns, %{
         form: form,
         platforms: Constants.platforms(:values),
-        statuses: Constants.statuses(:values)
+        statuses: Constants.statuses(:values),
+        groups: Constants.groups(:values),
+        sorts: Constants.sorts(:values),
+        orders: Constants.orders(:values)
       })
 
     ~H"""
-    <.form class="flex gap-2" id="filter-form" phx-change="filter" for={@form}>
-      <.input field={@form[:name]} fieldset_class="grow" placeholder="Search" autocomplete="off" />
-      <.input
-        field={@form[:platform]}
-        type="select"
-        options={@platforms}
-        prompt="Platform"
-      />
-      <.input
-        field={@form[:status]}
-        type="select"
-        options={@statuses}
-        prompt="Status"
-      />
+    <.form class="flex justify-between w-full" id="filter-form" phx-change="filter" for={@form}>
+      <div class="flex gap-2">
+        <.input field={@form[:name]} fieldset_class="grow" placeholder="Search" autocomplete="off" />
+
+        <.input
+          field={@form[:platform]}
+          type="select"
+          options={@platforms}
+          prompt="Platform"
+        />
+        <.input
+          field={@form[:status]}
+          type="select"
+          options={@statuses}
+          prompt="Status"
+        />
+      </div>
+      <div class="flex gap-2">
+        <!-- <.input -->
+        <!--   field={@form[:group]} -->
+        <!--   label_wrapper_class="select" -->
+        <!--   label_span_class="!mb-0" -->
+        <!--   type="select" -->
+        <!--   label="Group" -->
+        <!--   options={@groups} -->
+        <!--   prompt="None" -->
+        <!-- /> -->
+
+        <.input
+          field={@form[:sort]}
+          label_wrapper_class="select"
+          label_span_class="!mb-0"
+          type="select"
+          label="Sort"
+          options={@sorts}
+        />
+
+        <.input
+          field={@form[:order]}
+          label_wrapper_class="select"
+          label_span_class="!mb-0"
+          type="select"
+          label="Order"
+          options={@orders}
+        />
+      </div>
     </.form>
+
+    <.button
+      variant="btn-secondary"
+      icon="btn-square"
+      patch={~p"/backlog/collection/display/options"}
+    >
+      <.icon name="lucide-layout-dashboard" />
+    </.button>
     """
   end
 
