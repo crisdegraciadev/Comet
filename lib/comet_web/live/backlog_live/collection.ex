@@ -123,6 +123,7 @@ defmodule CometWeb.BacklogLive.Collection do
     socket =
       socket
       |> assign(:game, updated_game)
+      |> stream_insert(:game_list, updated_game)
       |> put_flash(:info, "Game updated!")
       |> push_patch(to: ~p"/backlog/collection/#{updated_game.id}", replace: true)
 
