@@ -8,5 +8,6 @@
 
 @import "./components/button.css";
 @import "./components/game-cover.css";
+@import "./components/input.css";
 @import "./components/menu.css";
 @import "./components/sidebar.css";

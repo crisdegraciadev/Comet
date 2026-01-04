@@ -5,16 +5,26 @@ defmodule CometWeb.CoreComponents do
   alias Phoenix.LiveView.JS
 
   attr :id, :string, required: true
-  attr :backdrop_link, :string
+  attr :backdrop_link, :string, required: true
+  attr :closable, :boolean, default: true
   attr :rest, :global
 
-  slot :inner_block
+  slot :header
+  slot :body
+  slot :footer
 
   def modal(assigns) do
     ~H"""
     <dialog id={@id} class="modal modal-open shadow-lg bg-transparent" {@rest}>
       <div class="modal-box bg-cm-black-200 border border-cm-black-300 !shadow-none">
-        {render_slot(@inner_block)}
+        <.link :if={@closable} class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" patch={@backdrop_link}>
+          ✕
+        </.link>
+        <div class="flex flex-col gap-4">
+          {render_slot(@header)}
+          {render_slot(@body)}
+          {render_slot(@footer)}
+        </div>
       </div>
 
       <.link :if={assigns[:backdrop_link]} class="modal-backdrop" patch={@backdrop_link}></.link>

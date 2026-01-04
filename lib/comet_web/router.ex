@@ -44,6 +44,7 @@ defmodule CometWeb.Router do
 
     scope "/backlog" do
       live "/collection", BacklogLive.Collection, :list
+      live "/collection/display/options", BacklogLive.Collection, :display_options
       live "/collection/:id", BacklogLive.Collection, :show
       live "/collection/:id/delete", BacklogLive.Collection, :delete
       live "/collection/:id/edit", BacklogLive.Collection, :edit

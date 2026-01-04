@@ -17,10 +17,16 @@ defmodule CometWeb.BacklogLive.Collection do
       current_scope={@current_scope}
       current_module={["backlog", "collection"]}
     >
-      <div id="backlog-page" phx-hook="PreserveScroll">
-        <div class="flex justify-between">
+      <div id="backlog-page" class="flex flex-col gap-2" phx-hook="PreserveScroll">
+        <div class="flex gap-2">
+          <.button
+            variant="btn-secondary"
+            icon="btn-square"
+            patch={~p"/backlog/collection/display/options"}
+          >
+            <.icon name="lucide-layout-dashboard" />
+          </.button>
           <.filters />
-          <.display_options preferences={@preferences} />
         </div>
 
         <.game_list streams={@streams} preferences={@preferences} />
@@ -28,6 +34,7 @@ defmodule CometWeb.BacklogLive.Collection do
         <.show_game_modal :if={@live_action == :show} game={@game} />
         <.delete_game_modal :if={@live_action == :delete} game={@game} />
         <.edit_game_modal :if={@live_action == :edit} game={@game} current_scope={@current_scope} />
+        <.display_options_modal :if={@live_action == :display_options} preferences={@preferences} />
 
         <.live_component
           :if={@live_action == :images_edit}
@@ -56,7 +63,8 @@ defmodule CometWeb.BacklogLive.Collection do
   end
 
   @impl true
-  def handle_params(_params, _url, %{assigns: %{live_action: :list}} = socket) do
+  def handle_params(_params, _url, %{assigns: %{live_action: live_action}} = socket)
+      when live_action in [:list, :display_options] do
     {:noreply, assign(socket, :game, nil)}
   end
 
@@ -159,65 +167,6 @@ defmodule CometWeb.BacklogLive.Collection do
         type="select"
         options={@statuses}
         prompt="Status"
-      />
-    </.form>
-    """
-  end
-
-  defp display_options(assigns) do
-    %{preferences: preferences} = assigns
-
-    form =
-      to_form(%{
-        "cols" => preferences.cols,
-        "show_name" => preferences.show_name,
-        "assets" => preferences.assets
-      })
-
-    cols = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    assets = [{"Cover", :cover}, {"Hero", :hero}]
-    show_name = [{"Yes", true}, {"No", false}]
-
-    assigns =
-      assign(assigns, %{
-        form: form,
-        cols: cols,
-        assets: assets,
-        show_name: show_name
-      })
-
-    ~H"""
-    <.form
-      class="flex items-center gap-4"
-      id="display-options-form"
-      phx-change="change_display"
-      for={@form}
-    >
-      <.input
-        field={@form[:cols]}
-        label_wrapper_class="select"
-        label_span_class="!mb-0"
-        type="select"
-        label="Columns"
-        options={@cols}
-      />
-
-      <.input
-        field={@form[:assets]}
-        label_wrapper_class="select"
-        label_span_class="!mb-0"
-        type="select"
-        label="Asset"
-        options={@assets}
-      />
-
-      <.input
-        field={@form[:show_name]}
-        label_wrapper_class="select"
-        label_span_class="!mb-0"
-        type="select"
-        label="Name"
-        options={@show_name}
       />
     </.form>
     """
@@ -449,6 +398,69 @@ defmodule CometWeb.BacklogLive.Collection do
         </div>
       </.form>
     </.game_modal>
+    """
+  end
+
+  defp display_options_modal(assigns) do
+    %{preferences: preferences} = assigns
+
+    form =
+      to_form(%{
+        "cols" => preferences.cols,
+        "show_name" => preferences.show_name,
+        "assets" => preferences.assets
+      })
+
+    cols = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    assets = [{"Cover", :cover}, {"Hero", :hero}]
+    show_name = [{"Yes", true}, {"No", false}]
+
+    assigns =
+      assign(assigns, %{
+        form: form,
+        cols: cols,
+        assets: assets,
+        show_name: show_name
+      })
+
+    ~H"""
+    <.modal id="display-options-modal" backdrop_link={~p"/backlog/collection"}>
+      <:header>
+        <h2 class="font-semibold text-2xl">Display Options</h2>
+      </:header>
+      <:body>
+        <.form
+          class="flex flex-col"
+          id="display-options-form"
+          phx-change="change_display"
+          for={@form}
+        >
+          <.input
+            field={@form[:cols]}
+            type="select"
+            label="Columns"
+            options={@cols}
+          />
+
+          <.input
+            field={@form[:assets]}
+            type="select"
+            label="Asset"
+            options={@assets}
+          />
+
+          <.input
+            field={@form[:show_name]}
+            type="select"
+            label="Name"
+            options={@show_name}
+          />
+        </.form>
+      </:body>
+      <:footer>
+        <.button patch={~p"/backlog/collection"}>Done</.button>
+      </:footer>
+    </.modal>
     """
   end
 end
