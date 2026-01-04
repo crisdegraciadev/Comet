@@ -131,22 +131,6 @@ defmodule CometWeb.BacklogLive.Collection do
   end
 
   @impl true
-  def handle_event(
-        "change_status",
-        %{"status" => status},
-        %{assigns: %{game: game, current_scope: current_scope}} = socket
-      ) do
-    {:ok, updated_game} = Game.Command.update(game, current_scope.user, %{status: status})
-
-    socket =
-      socket
-      |> assign(:game, updated_game)
-      |> stream_insert(:game_list, updated_game)
-
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_info({:updated_image, updated_game}, socket) do
     {:noreply, socket |> stream_insert(:game_list, updated_game)}
   end
