@@ -55,7 +55,7 @@ defmodule Comet.MixProject do
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:lucide,
        github: "lucide-icons/lucide",
-       tag: "0.544.0",
+       tag: "0.562.0",
        sparse: "icons",
        app: false,
        compile: false,

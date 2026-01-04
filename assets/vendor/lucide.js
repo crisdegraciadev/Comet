@@ -21,16 +21,14 @@ module.exports = plugin(function ({ matchComponents, theme }) {
       lucide: ({ name, fullPath }) => {
         let content = fs.readFileSync(fullPath).toString();
 
-        // eliminar saltos de línea
         content = content.replace(/\r?\n|\r/g, "");
-
-        // quitar width y height pero mantener viewBox
-        content = content.replace(/\s(width|height)="[^"]*"/g, "");
 
         return {
           [`--lucide-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
           "-webkit-mask": `var(--lucide-${name})`,
           mask: `var(--lucide-${name})`,
+          "mask-size": "contain",
+          "-webkit-mask-size": "contain",
           "background-color": "currentColor",
           "vertical-align": "middle",
           display: "inline-block",
