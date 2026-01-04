@@ -10,3 +10,8 @@
 [data-phx-teleported-src] {
   display: contents;
 }
+
+/* Fix this: https://github.com/saadeghi/daisyui/issues/3040 */
+:root {
+  scrollbar-gutter: auto !important;
+}
