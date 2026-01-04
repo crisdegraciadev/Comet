@@ -4,6 +4,24 @@ defmodule CometWeb.CoreComponents do
 
   alias Phoenix.LiveView.JS
 
+  attr :id, :string, required: true
+  attr :backdrop_link, :string
+  attr :rest, :global
+
+  slot :inner_block
+
+  def modal(assigns) do
+    ~H"""
+    <dialog id={@id} class="modal modal-open shadow-lg bg-transparent" {@rest}>
+      <div class="modal-box bg-cm-black-200 border border-cm-black-300 !shadow-none">
+        {render_slot(@inner_block)}
+      </div>
+
+      <.link :if={assigns[:backdrop_link]} class="modal-backdrop" patch={@backdrop_link}></.link>
+    </dialog>
+    """
+  end
+
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
