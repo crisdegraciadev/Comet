@@ -230,7 +230,7 @@ defmodule CometWeb.BacklogLive.Collection do
             <p id="empty" class="only:flex hidden text-white">Ready for your next adventure?</p>
             <.game_card
               :for={{dom_id, game} <- @streams.in_progress_game_list}
-              class="max-w-[140px]"
+              class="max-w-[140px] !bg-cm-black-100"
               id={dom_id}
               game={game}
               preferences={%{@preferences | assets: :cover}}
