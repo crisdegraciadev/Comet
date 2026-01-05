@@ -4,17 +4,14 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import { hooks as colocatedHooks } from "phoenix-colocated/comet";
 
+import { PreserveScroll } from "./preserve-scroll";
+import { Collapse } from "./collpase";
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
 
-let Hooks = {};
-
-Hooks.PreserveScroll = {
-  mounted() {
-    window.scrollTo(0, this.scrollY);
-  },
-  destroyed() {
-    this.scrollY = window.scrollY;
-  },
+let Hooks = {
+  PreserveScroll,
+  Collapse,
 };
 
 const liveSocket = new LiveSocket("/live", Socket, {

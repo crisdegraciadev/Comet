@@ -17,11 +17,9 @@ defmodule CometWeb.BacklogLive.Collection do
       current_scope={@current_scope}
       current_module={["backlog", "collection"]}
     >
-      <div id="backlog-page" class="flex flex-col gap-2" phx-hook="PreserveScroll">
-        <div class="flex justify-between gap-2">
-          <.filters />
-        </div>
-
+      <div id="backlog-page" class="flex flex-col gap-4" phx-hook="PreserveScroll">
+        <.in_progress_game_list streams={@streams} preferences={@preferences} />
+        <.filters />
         <.game_list streams={@streams} preferences={@preferences} />
 
         <.show_game_modal :if={@live_action == :show} game={@game} />
@@ -51,6 +49,7 @@ defmodule CometWeb.BacklogLive.Collection do
       |> assign(:current_scope, %{user: user})
       |> assign(:preferences, preferences)
       |> stream(:game_list, Game.Query.all(user))
+      |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}))
 
     {:ok, socket}
   end
@@ -95,6 +94,7 @@ defmodule CometWeb.BacklogLive.Collection do
       socket
       |> assign(:preferences, updated_preferences)
       |> stream(:game_list, Game.Query.all(user))
+      |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}))
 
     {:noreply, socket}
   end
@@ -125,6 +125,9 @@ defmodule CometWeb.BacklogLive.Collection do
       socket
       |> assign(:game, updated_game)
       |> stream_insert(:game_list, updated_game)
+      |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}),
+        reset: true
+      )
       |> put_flash(:info, "Game updated!")
       |> push_patch(to: ~p"/backlog/collection/#{updated_game.id}", replace: true)
 
@@ -176,16 +179,6 @@ defmodule CometWeb.BacklogLive.Collection do
         />
       </div>
       <div class="flex gap-2">
-        <!-- <.input -->
-        <!--   field={@form[:group]} -->
-        <!--   label_wrapper_class="select" -->
-        <!--   label_span_class="!mb-0" -->
-        <!--   type="select" -->
-        <!--   label="Group" -->
-        <!--   options={@groups} -->
-        <!--   prompt="None" -->
-        <!-- /> -->
-
         <.input
           field={@form[:sort]}
           label_wrapper_class="select"
@@ -203,16 +196,49 @@ defmodule CometWeb.BacklogLive.Collection do
           label="Order"
           options={@orders}
         />
+
+        <.button
+          variant="btn-secondary"
+          icon="btn-square"
+          patch={~p"/backlog/collection/display/options"}
+        >
+          <.icon name="lucide-layout-dashboard" />
+        </.button>
       </div>
     </.form>
+    """
+  end
 
-    <.button
-      variant="btn-secondary"
-      icon="btn-square"
-      patch={~p"/backlog/collection/display/options"}
+  attr :streams, :any, required: true
+  attr :preferences, Preferences, required: true
+
+  defp in_progress_game_list(assigns) do
+    ~H"""
+    <div
+      id="in-progress-game-list-toggle"
+      class="collapse collapse-arrow bg-cm-black-200 border border-base-300"
+      phx-hook="Collapse"
     >
-      <.icon name="lucide-layout-dashboard" />
-    </.button>
+      <div class="collapse-title font-semibold cursor-pointer">Currently Playing</div>
+      <div class="collapse-content">
+        <div class="flex flex-col gap-2">
+          <div
+            class="flex gap-4 "
+            id="in_progress_games"
+            phx-update="stream"
+          >
+            <p id="empty" class="only:flex hidden text-white">Ready for your next adventure?</p>
+            <.game_card
+              :for={{dom_id, game} <- @streams.in_progress_game_list}
+              class="max-w-[140px]"
+              id={dom_id}
+              game={game}
+              preferences={%{@preferences | assets: :cover}}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
     """
   end
 
@@ -220,25 +246,8 @@ defmodule CometWeb.BacklogLive.Collection do
   attr :preferences, Preferences, required: true
 
   defp game_list(assigns) do
-    grid_cols =
-      case assigns.preferences.cols do
-        2 -> "grid-cols-2"
-        3 -> "grid-cols-3"
-        4 -> "grid-cols-4"
-        5 -> "grid-cols-5"
-        6 -> "grid-cols-6"
-        7 -> "grid-cols-7"
-        8 -> "grid-cols-8"
-        9 -> "grid-cols-9"
-        10 -> "grid-cols-10"
-        11 -> "grid-cols-11"
-        12 -> "grid-cols-12"
-      end
-
-    assigns = assigns |> assign(:cols, grid_cols)
-
     ~H"""
-    <div class={["grid", @cols, "gap-4"]} id="games" phx-update="stream">
+    <div class={["grid", "grid-cols-#{@preferences.cols}", "gap-4"]} id="games" phx-update="stream">
       <.game_card
         :for={{dom_id, game} <- @streams.game_list}
         id={dom_id}
@@ -252,16 +261,26 @@ defmodule CometWeb.BacklogLive.Collection do
   attr :id, :string, required: true
   attr :game, Games.Game
   attr :preferences, Preferences, required: true
+  attr :class, :string, default: nil
 
   defp game_card(%{preferences: %{assets: :cover}} = assigns) do
     ~H"""
     <.link id={@id} patch={~p"/backlog/collection/#{@game}"}>
-      <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative">
+      <div class={[
+        "rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative",
+        @class
+      ]}>
         <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
           <.status_badge status={@game.status} />
           <.platform_badge platform={@game.platform} />
         </div>
-        <img class="aspect-2/3 rounded-tl-md rounded-tr-md" src={@game.cover} />
+        <img
+          class={[
+            "aspect-2/3 ",
+            if(!@preferences.show_name, do: "rounded-md", else: "rounded-tl-md rounded-tr-md")
+          ]}
+          src={@game.cover}
+        />
         <span class={[
           "font-semibold text-sm truncate px-2 text-center pb-2",
           !@preferences.show_name && "!hidden"

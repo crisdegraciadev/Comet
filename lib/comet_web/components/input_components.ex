@@ -54,7 +54,7 @@ defmodule CometWeb.InputComponents do
       end)
 
     ~H"""
-    <div class={["fieldset mb-2", @fieldset_class]}>
+    <div class={["fieldset", @fieldset_class]}>
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <span class="label">
@@ -76,7 +76,7 @@ defmodule CometWeb.InputComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class={["fieldset mb-2", @fieldset_class]}>
+    <div class={["fieldset", @fieldset_class]}>
       <label class={@label_wrapper_class}>
         <span :if={@label} class={["label mb-1", @label_span_class]}>{@label}</span>
         <select
@@ -97,7 +97,7 @@ defmodule CometWeb.InputComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class={["fieldset mb-2", @fieldset_class]}>
+    <div class={["fieldset", @fieldset_class]}>
       <label>
         <span :if={@label} class="label mb-1">{@label}</span>
         <textarea
@@ -114,7 +114,7 @@ defmodule CometWeb.InputComponents do
 
   def input(assigns) do
     ~H"""
-    <div class={["fieldset mb-2", @fieldset_class]}>
+    <div class={["fieldset", @fieldset_class]}>
       <label>
         <span :if={@label} class="label mb-1">{@label}</span>
         <input

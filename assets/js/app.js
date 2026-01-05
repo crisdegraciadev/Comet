@@ -1,5 +1,5 @@
 import "phoenix_html";
 
-import "./services/liveview";
+import "./hooks/_liveview";
 
 import "./components/topbar";
