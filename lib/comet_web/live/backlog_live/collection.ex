@@ -246,8 +246,25 @@ defmodule CometWeb.BacklogLive.Collection do
   attr :preferences, Preferences, required: true
 
   defp game_list(assigns) do
+    grid_cols =
+      case assigns.preferences.cols do
+        2 -> "grid-cols-2"
+        3 -> "grid-cols-3"
+        4 -> "grid-cols-4"
+        5 -> "grid-cols-5"
+        6 -> "grid-cols-6"
+        7 -> "grid-cols-7"
+        8 -> "grid-cols-8"
+        9 -> "grid-cols-9"
+        10 -> "grid-cols-10"
+        11 -> "grid-cols-11"
+        12 -> "grid-cols-12"
+      end
+
+    assigns = assigns |> assign(:cols, grid_cols)
+
     ~H"""
-    <div class={["grid", "grid-cols-#{@preferences.cols}", "gap-4"]} id="games" phx-update="stream">
+    <div class={["grid", @cols, "gap-4"]} id="games" phx-update="stream">
       <.game_card
         :for={{dom_id, game} <- @streams.game_list}
         id={dom_id}
