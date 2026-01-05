@@ -48,7 +48,7 @@ defmodule CometWeb.BacklogLive.Collection do
       socket
       |> assign(:current_scope, %{user: user})
       |> assign(:preferences, preferences)
-      |> stream(:game_list, Game.Query.all(user))
+      |> stream(:game_list, Game.Query.all(user, %{"sort" => "status", "order" => "asc"}))
       |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}))
 
     {:ok, socket}
