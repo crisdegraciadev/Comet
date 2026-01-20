@@ -1,96 +1,15 @@
-defmodule CometWeb.BrowserLive.Collection do
-  use CometWeb, :live_view
+defmodule CometWeb.Live.BrowserLive.Components do
+  use Phoenix.Component
+  use CometWeb, :html
 
   alias Comet.Games.Game
-  alias Comet.Services.SGDB
   alias Comet.Services.Constants
   alias CometWeb.LiveComponents.SGDBGameCardComponent
-
-  on_mount {CometWeb.UserAuth, :require_sudo_mode}
-
-  @impl true
-  def render(assigns) do
-    ~H"""
-    <Layouts.app
-      flash={@flash}
-      current_scope={@current_scope}
-      current_module={["browser", "collection"]}
-    >
-      <.search_form api_key={@api_key} query={assigns[:query]} />
-      <.search_results
-        :if={@api_key}
-        api_key={@api_key}
-        results={assigns[:results]}
-        query={assigns[:query]}
-      />
-
-      <.add_game_modal
-        :if={@live_action == :new}
-        sgdb_game={@sgdb_game}
-        current_scope={@current_scope}
-        query={@query}
-      />
-    </Layouts.app>
-    """
-  end
-
-  @impl true
-  def mount(_params, _session, socket) do
-    {:ok, socket}
-  end
-
-  @impl true
-  def handle_params(%{"query" => query, "id" => id}, _session, socket) do
-    socket =
-      socket
-      |> assign(:query, query)
-      |> assign_api_key()
-      |> assign_game(id)
-      |> assign_results()
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_params(%{"query" => query}, _session, socket) do
-    socket = socket |> assign(:query, query) |> assign_api_key() |> assign_results()
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_params(_params, _session, socket) do
-    socket = socket |> assign_api_key()
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, push_navigate(socket, to: ~p"/browser/collection?query=#{query}", replace: true)}
-  end
-
-  @impl true
-  def handle_event("save", %{"game" => game_params}, socket) do
-    user = socket.assigns.current_scope.user
-    query = socket.assigns.query
-
-    case Game.Command.create(user, game_params) do
-      {:ok, game} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "#{game.name} added to backlog")
-         |> push_navigate(to: ~p"/browser/collection?query=#{query}")}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Error adding game to backlog")}
-    end
-  end
 
   attr :api_key, :string, default: nil
   attr :query, :string, default: ""
 
-  defp search_form(assigns = %{api_key: nil}) do
+  def search_form(%{api_key: nil} = assigns) do
     ~H"""
     <.alert :if={!@api_key} color="alert-warning">
       <.icon name="lucide-info" />
@@ -103,7 +22,7 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
-  defp search_form(assigns) do
+  def search_form(assigns) do
     assigns = assign(assigns, :form, to_form(%{"query" => assigns.query}))
 
     ~H"""
@@ -130,7 +49,7 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
-  defp search_results(%{results: nil} = assigns) do
+  def search_results(%{results: nil} = assigns) do
     ~H"""
     <div class="text-center py-8 text-base-content/70">
       Type a search term to find your games.
@@ -138,7 +57,7 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
-  defp search_results(%{results: []} = assigns) do
+  def search_results(%{results: []} = assigns) do
     ~H"""
     <div class="text-center py-8 text-base-content/70">
       No games found. Try a different search term.
@@ -146,12 +65,12 @@ defmodule CometWeb.BrowserLive.Collection do
     """
   end
 
-  defp search_results(assigns) do
+  def search_results(assigns) do
     ~H"""
     <div class="grid grid-cols-8 gap-4">
       <.link
         :for={sgdb_game <- @results}
-        navigate={~p"/browser/collection/#{sgdb_game.id}/new?query=#{@query}"}
+        navigate={~p"/browser/#{sgdb_game.id}/new?query=#{@query}"}
       >
         <.live_component
           module={SGDBGameCardComponent}
@@ -168,32 +87,32 @@ defmodule CometWeb.BrowserLive.Collection do
   attr :query, :string, required: true
   attr :current_scope, :map, required: true
 
-  defp add_game_modal(assigns) do
+  def add_game_modal(assigns) do
     changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
 
     platforms = Constants.platforms(:values)
 
-    {_, defaultPlatform} =
+    {_, default_platform} =
       Enum.find(platforms, Enum.at(platforms, 0), fn {_, value} -> value == :pc end)
 
     statuses = Constants.statuses(:values)
 
-    {_, defaultStatus} =
+    {_, default_status} =
       Enum.find(statuses, Enum.at(statuses, 0), fn {_, value} -> value == :pending end)
 
     assigns =
       assigns
       |> assign(:form, to_form(changeset))
       |> assign(:platforms, platforms)
-      |> assign(:defaultPlatform, defaultPlatform)
+      |> assign(:default_platform, default_platform)
       |> assign(:statuses, statuses)
-      |> assign(:defaultStatus, defaultStatus)
+      |> assign(:default_status, default_status)
 
     ~H"""
     <.game_modal
       id={"edit-sgdb-game-modal-#{@sgdb_game.id}"}
       game={@sgdb_game}
-      backdrop_link={~p"/browser/collection?query=#{@query}"}
+      backdrop_link={~p"/browser?query=#{@query}"}
     >
       <.form
         class="flex flex-col h-full justify-between"
@@ -209,7 +128,7 @@ defmodule CometWeb.BrowserLive.Collection do
             type="select"
             label="Platform"
             options={@platforms}
-            value={@defaultPlatform}
+            value={@default_platform}
             fieldset_class="grow"
           />
           <.input
@@ -217,7 +136,7 @@ defmodule CometWeb.BrowserLive.Collection do
             type="select"
             label="Status"
             options={@statuses}
-            value={@defaultStatus}
+            value={@default_status}
             fieldset_class="grow"
           />
         </div>
@@ -239,42 +158,10 @@ defmodule CometWeb.BrowserLive.Collection do
         />
         <div class="flex justify-end gap-2 mt-4">
           <.button type="submit" phx-disable-with="Saving...">Save</.button>
-          <!-- <.button variant="error" href={~p"/backlog/collection/#{@game.id}"}>Cancel</.button> -->
+          <.button variant="btn-error" patch={~p"/browser?query=#{@query}"}>Cancel</.button>
         </div>
       </.form>
     </.game_modal>
     """
-  end
-
-  defp assign_game(%{assigns: %{api_key: api_key}} = socket, id) do
-    {:ok, %{game: %{id: id, name: name}}} = SGDB.get_game(id, api_key)
-    {:ok, %{covers: covers}} = SGDB.get_covers(id, api_key)
-    {:ok, %{heroes: heroes}} = SGDB.get_heroes(id, api_key)
-
-    sgdb_game = %{
-      id: id,
-      name: name,
-      cover: Game.Utils.main_asset_url(covers),
-      hero: Game.Utils.main_asset_url(heroes)
-    }
-
-    assign(socket, :sgdb_game, sgdb_game)
-  end
-
-  defp assign_results(%{assigns: %{query: query}} = socket) do
-    case SGDB.search(query) do
-      {:ok, results} -> socket |> assign(:results, results)
-      {:error, reason} -> socket |> put_flash(:error, reason)
-    end
-  end
-
-  defp assign_api_key(socket) do
-    user = Comet.Accounts.get_user_with_profile!(socket.assigns.current_scope.user.id)
-    api_key = user.profile.api_key
-
-    assign(socket, %{
-      api_key: api_key,
-      current_scope: %{user: user}
-    })
   end
 end

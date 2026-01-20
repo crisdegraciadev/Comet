@@ -43,17 +43,17 @@ defmodule CometWeb.Router do
     end
 
     scope "/backlog" do
-      live "/collection", BacklogLive.Collection, :list
-      live "/collection/display/options", BacklogLive.Collection, :display_options
-      live "/collection/:id", BacklogLive.Collection, :show
-      live "/collection/:id/delete", BacklogLive.Collection, :delete
-      live "/collection/:id/edit", BacklogLive.Collection, :edit
-      live "/collection/:id/images/edit", BacklogLive.Collection, :images_edit
+      live "/", BacklogLive.Backlog, :list
+      live "/display/options", BacklogLive.Backlog, :display_options
+      live "/:id", BacklogLive.Backlog, :show
+      live "/:id/delete", BacklogLive.Backlog, :delete
+      live "/:id/edit", BacklogLive.Backlog, :edit
+      live "/:id/images/edit", BacklogLive.Backlog, :images_edit
     end
 
     scope "/browser" do
-      live "/collection", BrowserLive.Collection, :list
-      live "/collection/:id/new", BrowserLive.Collection, :new
+      live "/", BrowserLive.Browser, :list
+      live "/:id/new", BrowserLive.Browser, :new
     end
 
     post "/users/update-password", UserSessionController, :update_password

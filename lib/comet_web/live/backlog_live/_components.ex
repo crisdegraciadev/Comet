@@ -1,145 +1,13 @@
-defmodule CometWeb.BacklogLive.Collection do
-  use CometWeb, :live_view
+defmodule CometWeb.Live.BacklogLive.Components do
+  use Phoenix.Component
+  use CometWeb, :html
 
   alias Comet.Accounts.Preferences
   alias Comet.Games
   alias Comet.Games.Game
   alias Comet.Services.Constants
-  alias CometWeb.LiveComponents.ImageSelectorComponent
 
-  on_mount {CometWeb.UserAuth, :require_sudo_mode}
-
-  @impl true
-  def render(assigns) do
-    ~H"""
-    <Layouts.app
-      flash={@flash}
-      current_scope={@current_scope}
-      current_module={["backlog", "collection"]}
-    >
-      <div id="backlog-page" class="flex flex-col gap-4" phx-hook="PreserveScroll">
-        <.in_progress_game_list streams={@streams} preferences={@preferences} />
-        <.filters />
-        <.game_list streams={@streams} preferences={@preferences} />
-
-        <.show_game_modal :if={@live_action == :show} game={@game} />
-        <.delete_game_modal :if={@live_action == :delete} game={@game} />
-        <.edit_game_modal :if={@live_action == :edit} game={@game} current_scope={@current_scope} />
-        <.display_options_modal :if={@live_action == :display_options} preferences={@preferences} />
-
-        <.live_component
-          :if={@live_action == :images_edit}
-          module={ImageSelectorComponent}
-          id={"images-selector-#{@game.id}"}
-          game={@game}
-          current_scope={@current_scope}
-        />
-      </div>
-    </Layouts.app>
-    """
-  end
-
-  @impl true
-  def mount(_params, _session, %{assigns: %{current_scope: %{user: user}}} = socket) do
-    user = Comet.Repo.preload(user, :profile)
-    preferences = Preferences.Query.get!(user)
-
-    socket =
-      socket
-      |> assign(:current_scope, %{user: user})
-      |> assign(:preferences, preferences)
-      |> stream(:game_list, Game.Query.all(user, %{"sort" => "status", "order" => "asc"}))
-      |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}))
-
-    {:ok, socket}
-  end
-
-  @impl true
-  def handle_params(_params, _url, %{assigns: %{live_action: live_action}} = socket)
-      when live_action in [:list, :display_options] do
-    {:noreply, assign(socket, :game, nil)}
-  end
-
-  @impl true
-  def handle_params(
-        %{"id" => id},
-        _url,
-        %{assigns: %{live_action: live_action, current_scope: %{user: user}}} = socket
-      )
-      when live_action in [:show, :edit, :delete, :images_edit] do
-    game = Game.Query.get!(user, String.to_integer(id))
-
-    {:noreply, assign(socket, :game, game)}
-  end
-
-  @impl true
-  def handle_event("filter", params, %{assigns: %{current_scope: %{user: user}}} = socket) do
-    socket =
-      socket
-      |> assign(:form, to_form(params))
-      |> stream(:game_list, Game.Query.all(user, params), reset: true)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event(
-        "change_display",
-        params,
-        %{assigns: %{preferences: preferences, current_scope: %{user: user}}} = socket
-      ) do
-    {:ok, updated_preferences} = Preferences.Command.update(preferences, user, params)
-
-    socket =
-      socket
-      |> assign(:preferences, updated_preferences)
-      |> stream(:game_list, Game.Query.all(user))
-      |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}))
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("delete", %{"id" => id}, %{assigns: %{current_scope: %{user: user}}} = socket) do
-    game = Game.Query.get!(user, id)
-    Game.Command.delete!(game)
-
-    socket =
-      socket
-      |> stream_delete(:game_list, game)
-      |> put_flash(:info, "Game deleted")
-      |> push_patch(to: ~p"/backlog/collection", replace: true)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event(
-        "update",
-        %{"game" => game_params},
-        %{assigns: %{game: game, current_scope: %{user: user}}} = socket
-      ) do
-    {:ok, updated_game} = Game.Command.update(game, user, game_params)
-
-    socket =
-      socket
-      |> assign(:game, updated_game)
-      |> stream_insert(:game_list, updated_game)
-      |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}),
-        reset: true
-      )
-      |> put_flash(:info, "Game updated!")
-      |> push_patch(to: ~p"/backlog/collection/#{updated_game.id}", replace: true)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_info({:updated_image, updated_game}, socket) do
-    {:noreply, socket |> stream_insert(:game_list, updated_game)}
-  end
-
-  defp filters(assigns) do
+  def filters(assigns) do
     form =
       to_form(%{
         "name" => "",
@@ -200,7 +68,7 @@ defmodule CometWeb.BacklogLive.Collection do
         <.button
           variant="btn-secondary"
           icon="btn-square"
-          patch={~p"/backlog/collection/display/options"}
+          patch={~p"/backlog/display/options"}
         >
           <.icon name="lucide-layout-dashboard" />
         </.button>
@@ -212,7 +80,7 @@ defmodule CometWeb.BacklogLive.Collection do
   attr :streams, :any, required: true
   attr :preferences, Preferences, required: true
 
-  defp in_progress_game_list(assigns) do
+  def in_progress_game_list(assigns) do
     ~H"""
     <div
       id="in-progress-game-list-toggle"
@@ -245,7 +113,7 @@ defmodule CometWeb.BacklogLive.Collection do
   attr :streams, :any, required: true
   attr :preferences, Preferences, required: true
 
-  defp game_list(assigns) do
+  def game_list(assigns) do
     grid_cols =
       case assigns.preferences.cols do
         2 -> "grid-cols-2"
@@ -280,9 +148,9 @@ defmodule CometWeb.BacklogLive.Collection do
   attr :preferences, Preferences, required: true
   attr :class, :string, default: nil
 
-  defp game_card(%{preferences: %{assets: :cover}} = assigns) do
+  def game_card(%{preferences: %{assets: :cover}} = assigns) do
     ~H"""
-    <.link id={@id} patch={~p"/backlog/collection/#{@game}"}>
+    <.link id={@id} patch={~p"/backlog/#{@game}"}>
       <div class={[
         "rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative",
         @class
@@ -309,9 +177,9 @@ defmodule CometWeb.BacklogLive.Collection do
     """
   end
 
-  defp game_card(%{preferences: %{assets: :hero}} = assigns) do
+  def game_card(%{preferences: %{assets: :hero}} = assigns) do
     ~H"""
-    <.link id={@id} patch={~p"/backlog/collection/#{@game}"}>
+    <.link id={@id} patch={~p"/backlog/#{@game}"}>
       <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative aspect-96/31">
         <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
           <.status_badge status={@game.status} />
@@ -341,18 +209,18 @@ defmodule CometWeb.BacklogLive.Collection do
 
   attr :game, Games.Game
 
-  defp show_game_modal(assigns) do
+  def show_game_modal(assigns) do
     ~H"""
     <.game_modal
       id={"show-game-modal-#{@game.id}"}
       game={@game}
-      backdrop_link={~p"/backlog/collection"}
+      backdrop_link={~p"/backlog"}
     >
       <:actions>
-        <.button patch={~p"/backlog/collection/#{@game}/edit"}>
+        <.button patch={~p"/backlog/#{@game}/edit"}>
           <.icon name="lucide-pencil" /> Edit
         </.button>
-        <.button variant="btn-error" patch={~p"/backlog/collection/#{@game}/delete"}>
+        <.button variant="btn-error" patch={~p"/backlog/#{@game}/delete"}>
           <.icon name="lucide-trash" /> Delete
         </.button>
       </:actions>
@@ -381,12 +249,12 @@ defmodule CometWeb.BacklogLive.Collection do
 
   attr :game, Games.Game
 
-  defp delete_game_modal(assigns) do
+  def delete_game_modal(assigns) do
     ~H"""
     <.game_modal
       id={"delete-game-modal-#{@game.id}"}
       game={@game}
-      backdrop_link={~p"/backlog/collection"}
+      backdrop_link={~p"/backlog"}
     >
       <div class="flex flex-col gap-2">
         <p>
@@ -398,7 +266,7 @@ defmodule CometWeb.BacklogLive.Collection do
       </div>
       <div class="flex justify-end w-full gap-2">
         <.button phx-click="delete" phx-value-id={@game.id}>Confirm</.button>
-        <.button variant="btn-error" patch={~p"/backlog/collection/#{@game.id}"}>Cancel</.button>
+        <.button variant="btn-error" patch={~p"/backlog/#{@game.id}"}>Cancel</.button>
       </div>
     </.game_modal>
     """
@@ -407,7 +275,7 @@ defmodule CometWeb.BacklogLive.Collection do
   attr :game, Games.Game
   attr :current_scope, :map, required: true
 
-  defp edit_game_modal(assigns) do
+  def edit_game_modal(assigns) do
     changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
 
     assigns =
@@ -420,11 +288,11 @@ defmodule CometWeb.BacklogLive.Collection do
     <.game_modal
       id={"edit-game-modal-#{@game.id}"}
       game={@game}
-      backdrop_link={~p"/backlog/collection"}
+      backdrop_link={~p"/backlog"}
     >
       <:actions>
-        <.button variant="btn-secondary" patch={~p"/backlog/collection/#{@game.id}/images/edit"}>
-          <.icon name="lucide-file-image" /> Images
+        <.button variant="btn-secondary" patch={~p"/backlog/#{@game.id}/images/edit"}>
+          <.icon name="lucide-file-image" /> Imagescollection/5
         </.button>
       </:actions>
 
@@ -472,7 +340,7 @@ defmodule CometWeb.BacklogLive.Collection do
         />
         <div class="flex justify-end gap-2 mt-4">
           <.button type="submit" phx-disable-with="Saving...">Save</.button>
-          <.button variant="btn-error" patch={~p"/backlog/collection/#{@game.id}"}>
+          <.button variant="btn-error" patch={~p"/backlog/#{@game.id}"}>
             Cancel
           </.button>
         </div>
@@ -481,7 +349,7 @@ defmodule CometWeb.BacklogLive.Collection do
     """
   end
 
-  defp display_options_modal(assigns) do
+  def display_options_modal(assigns) do
     %{preferences: preferences} = assigns
 
     form =
@@ -504,7 +372,7 @@ defmodule CometWeb.BacklogLive.Collection do
       })
 
     ~H"""
-    <.modal id="display-options-modal" backdrop_link={~p"/backlog/collection"}>
+    <.modal id="display-options-modal" backdrop_link={~p"/backlog"}>
       <:header>
         <h2 class="font-semibold text-2xl">Display Options</h2>
       </:header>
@@ -538,7 +406,7 @@ defmodule CometWeb.BacklogLive.Collection do
         </.form>
       </:body>
       <:footer>
-        <.button patch={~p"/backlog/collection"}>Done</.button>
+        <.button patch={~p"/backlog"}>Done</.button>
       </:footer>
     </.modal>
     """

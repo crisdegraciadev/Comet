@@ -100,8 +100,8 @@ defmodule CometWeb.Layouts do
 
   def sidebar(assigns) do
     top_menu = [
-      {"Backlog", ~p"/backlog/collection", "lucide-gamepad-2"},
-      {"Browser", ~p"/browser/collection", "lucide-file-search"}
+      {"Backlog", ~p"/backlog", "lucide-gamepad-2"},
+      {"Browser", ~p"/browser", "lucide-file-search"}
     ]
 
     bottom_menu = [

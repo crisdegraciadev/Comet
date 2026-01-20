@@ -37,7 +37,7 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
     <div id={"images-selector-#{@game.id}"}>
       <.game_modal
         id={"change-cover-game-modal-#{@game.id}"}
-        backdrop_link={~p"/backlog/collection"}
+        backdrop_link={~p"/backlog"}
         game={@game}
       >
         <div class="tabs tabs-border">
@@ -114,7 +114,7 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
         </div>
 
         <div class="mt-4 flex justify-end">
-          <.button patch={~p"/backlog/collection/#{@game}/edit"}>Done</.button>
+          <.button patch={~p"/backlog/#{@game}/edit"}>Done</.button>
         </div>
       </.game_modal>
     </div>
