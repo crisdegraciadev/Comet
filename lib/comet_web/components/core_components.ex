@@ -9,21 +9,40 @@ defmodule CometWeb.CoreComponents do
   attr :closable, :boolean, default: true
   attr :rest, :global
 
-  slot :header
+  slot :header do
+    attr :title, :string
+  end
+
   slot :body
   slot :footer
 
   def modal(assigns) do
     ~H"""
-    <dialog id={@id} class="modal modal-open shadow-lg bg-transparent" {@rest}>
+    <dialog id={@id} class="modal modal-open shadow-lg" {@rest}>
       <div class="modal-box bg-cm-black-200 border border-cm-black-300 !shadow-none">
-        <.link :if={@closable} class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" patch={@backdrop_link}>
+        <.link
+          :if={@closable}
+          class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          patch={@backdrop_link}
+        >
           ✕
         </.link>
-        <div class="flex flex-col gap-4">
-          {render_slot(@header)}
-          {render_slot(@body)}
-          {render_slot(@footer)}
+        <div class="flex flex-col gap-8">
+          <div :if={@header != []}>
+            <%= if title = @header |> hd() |> Map.get(:title) do %>
+              <span class="text-lg font-semibold">{title}</span>
+            <% else %>
+              {render_slot(@header)}
+            <% end %>
+          </div>
+
+          <div :if={@body != []}>
+            {render_slot(@body)}
+          </div>
+
+          <div :if={@footer != []} class="flex gap-2 justify-end">
+            {render_slot(@footer)}
+          </div>
         </div>
       </div>
 
@@ -83,7 +102,7 @@ defmodule CometWeb.CoreComponents do
   attr :outline, :boolean, default: false
   attr :dash, :boolean, default: false
   attr :active, :boolean, default: false
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
+  attr :rest, :global, include: ~w(href navigate patch method download name value disabled form)
 
   slot :inner_block, required: true
 
@@ -151,6 +170,41 @@ defmodule CometWeb.CoreComponents do
     ~H"""
     <div class={["divider", @class]}>
       <span :if={@label} class="text-xs text-base-content/40">{@label}</span>
+    </div>
+    """
+  end
+
+  attr :bg, :string, values: ~w(bg-cm-black-100 bg-cm-black-200), default: "bg-cm-black-100"
+  attr :size, :string, values: ~w(card-xs card-sm card-md card-lg card-xl), default: "card-md"
+
+  slot :inner_block, required: true
+
+  def card(assigns) do
+    ~H"""
+    <div class={["card border border-base-300 rounded-box shadow-md", @size, @bg]}>
+      <div class="card-body ">
+        {render_slot(@inner_block)}
+      </div>
+    </div>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :title, :string, required: true
+
+  slot :inner_block, required: true
+
+  def collapse(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      class="collapse collapse-arrow bg-cm-black-200 border border-base-300"
+      phx-hook="Collapse"
+    >
+      <div class="collapse-title text-lg font-semibold cursor-pointer">{@title}</div>
+      <div class="collapse-content">
+        {render_slot(@inner_block)}
+      </div>
     </div>
     """
   end
@@ -305,35 +359,25 @@ defmodule CometWeb.CoreComponents do
     """
   end
 
-  attr :size, :string, values: ~w(xs sm md lg xl), default: "md"
+  attr :size, :string,
+    values: ~w(badge-xs badge-sm badge-md badge-lg badge-xl),
+    default: "badge-md"
 
   attr :color, :string,
-    values: [
-      nil,
-      "badge-primary",
-      "badge-secondary",
-      "badge-accent",
-      "badge-neutral",
-      "badge-info",
-      "badge-success",
-      "badge-warning",
-      "badge-error"
-    ],
-    default: nil
+    values:
+      ~w(badge-primary badge-secondary badge-accent badge-neutral badge-info badge-success badge-warning badge-error _),
+    default: "badge-neutral"
 
-  attr :variant, :string, values: [nil, "soft", "outline", "dash", "ghost"], default: nil
+  attr :variant, :string, values: [nil, "badge-soft", "outline", "dash", "ghost"], default: nil
   attr :class, :string, default: nil
-  slot :inner_block, required: true
+  attr :style, :string, default: nil
+  attr :rest, :global
+
+  slot :inner_block
 
   def badge(assigns) do
     ~H"""
-    <span class={[
-      "badge",
-      "badge-#{@size}",
-      @color,
-      @variant && "badge-#{@variant}",
-      @class
-    ]}>
+    <span class={["badge", @size, @color, @variant, @class]} style={@style} {@rest}>
       {render_slot(@inner_block)}
     </span>
     """

@@ -1,0 +1,5 @@
+@utility checkbox {
+  &:checked {
+    box-shadow: none;
+  }
+}

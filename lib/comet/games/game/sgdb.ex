@@ -1,4 +1,4 @@
-defmodule Comet.Services.SGDB do
+defmodule Comet.Games.Game.SGDB do
   @moduledoc """
   Service for interacting with the SteamGridDB API.
   Documentation: https://www.steamgriddb.com/api/v2

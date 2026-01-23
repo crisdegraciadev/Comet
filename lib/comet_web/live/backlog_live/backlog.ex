@@ -1,8 +1,10 @@
 defmodule CometWeb.BacklogLive.Backlog do
   use CometWeb, :live_view
 
-  alias Comet.Accounts.Preferences
-  alias Comet.Games.Game
+  alias Comet.Accounts
+  alias Comet.Games
+  alias Comet.Tags
+  alias CometWeb.Layouts
   alias CometWeb.LiveComponents.ImageSelectorComponent
 
   import CometWeb.Live.BacklogLive.Components
@@ -15,17 +17,23 @@ defmodule CometWeb.BacklogLive.Backlog do
     <Layouts.app
       flash={@flash}
       current_scope={@current_scope}
-      current_module={["backlog", "collection"]}
+      current_module={["backlog"]}
+      full_width={true}
     >
       <div id="backlog-page" class="flex flex-col gap-4" phx-hook="PreserveScroll">
-        <.in_progress_game_list streams={@streams} preferences={@preferences} />
-        <.filters />
+        <.filters user={@current_scope.user} />
         <.game_list streams={@streams} preferences={@preferences} />
 
+        <.display_options_modal :if={@live_action == :display_options} preferences={@preferences} />
         <.show_game_modal :if={@live_action == :show} game={@game} />
         <.delete_game_modal :if={@live_action == :delete} game={@game} />
-        <.edit_game_modal :if={@live_action == :edit} game={@game} current_scope={@current_scope} />
-        <.display_options_modal :if={@live_action == :display_options} preferences={@preferences} />
+        <.edit_game_modal
+          :if={@live_action == :edit}
+          game={@game}
+          user={@current_scope.user}
+          platforms={@platforms}
+          statuses={@statuses}
+        />
 
         <.live_component
           :if={@live_action == :images_edit}
@@ -42,22 +50,23 @@ defmodule CometWeb.BacklogLive.Backlog do
   @impl true
   def mount(_params, _session, %{assigns: %{current_scope: %{user: user}}} = socket) do
     user = Comet.Repo.preload(user, :profile)
-    preferences = Preferences.Query.get!(user)
+
+    preferences = Accounts.Preferences.Query.get!(user)
+
+    statuses = Tags.all_statuses(user)
+    platforms = Tags.all_platforms(user)
+
+    game_list = Games.Game.Query.all(user, %{"sort" => "status", "order" => "asc"})
 
     socket =
       socket
       |> assign(:current_scope, %{user: user})
       |> assign(:preferences, preferences)
-      |> stream(:game_list, Game.Query.all(user, %{"sort" => "status", "order" => "asc"}))
-      |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}))
+      |> assign(:statuses, statuses)
+      |> assign(:platforms, platforms)
+      |> stream(:game_list, game_list)
 
     {:ok, socket}
-  end
-
-  @impl true
-  def handle_params(_params, _url, %{assigns: %{live_action: live_action}} = socket)
-      when live_action in [:list, :display_options] do
-    {:noreply, assign(socket, :game, nil)}
   end
 
   @impl true
@@ -67,9 +76,14 @@ defmodule CometWeb.BacklogLive.Backlog do
         %{assigns: %{live_action: live_action, current_scope: %{user: user}}} = socket
       )
       when live_action in [:show, :edit, :delete, :images_edit] do
-    game = Game.Query.get!(user, String.to_integer(id))
+    game = Games.Game.Query.get!(user, String.to_integer(id))
 
     {:noreply, assign(socket, :game, game)}
+  end
+
+  @impl true
+  def handle_params(_params, _url, socket) do
+    {:noreply, socket}
   end
 
   @impl true
@@ -77,7 +91,7 @@ defmodule CometWeb.BacklogLive.Backlog do
     socket =
       socket
       |> assign(:form, to_form(params))
-      |> stream(:game_list, Game.Query.all(user, params), reset: true)
+      |> stream(:game_list, Games.Game.Query.all(user, params), reset: true)
 
     {:noreply, socket}
   end
@@ -88,21 +102,20 @@ defmodule CometWeb.BacklogLive.Backlog do
         params,
         %{assigns: %{preferences: preferences, current_scope: %{user: user}}} = socket
       ) do
-    {:ok, updated_preferences} = Preferences.Command.update(preferences, user, params)
+    {:ok, updated_preferences} = Accounts.Preferences.Command.update(preferences, user, params)
 
     socket =
       socket
       |> assign(:preferences, updated_preferences)
-      |> stream(:game_list, Game.Query.all(user))
-      |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}))
+      |> stream(:game_list, Games.Game.Query.all(user))
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, %{assigns: %{current_scope: %{user: user}}} = socket) do
-    game = Game.Query.get!(user, id)
-    Game.Command.delete!(game)
+    game = Games.Game.Query.get!(user, id)
+    Games.Game.Command.delete!(game)
 
     socket =
       socket
@@ -119,15 +132,14 @@ defmodule CometWeb.BacklogLive.Backlog do
         %{"game" => game_params},
         %{assigns: %{game: game, current_scope: %{user: user}}} = socket
       ) do
-    {:ok, updated_game} = Game.Command.update(game, user, game_params)
+    {:ok, updated_game} = Games.Game.Command.update(game, user, game_params)
+
+    game = Games.Game.Query.get!(user, updated_game.id)
 
     socket =
       socket
-      |> assign(:game, updated_game)
-      |> stream_insert(:game_list, updated_game)
-      |> stream(:in_progress_game_list, Game.Query.all(user, %{"status" => "in_progress"}),
-        reset: true
-      )
+      |> assign(:game, game)
+      |> stream_insert(:game_list, game)
       |> put_flash(:info, "Game updated!")
       |> push_patch(to: ~p"/backlog/#{updated_game.id}", replace: true)
 

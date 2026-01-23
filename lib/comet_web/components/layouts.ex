@@ -6,13 +6,17 @@ defmodule CometWeb.Layouts do
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :current_scope, :map, default: nil
   attr :current_module, :list, default: ["/", ""]
+  attr :full_width, :boolean, default: false
 
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
     <.sidebar current_scope={@current_scope} current_module={@current_module}>
-      <main class="px-4 py-8 lg:px-10 flex justify-center">
+      <main class={[
+        "px-4 py-8 lg:px-10 flex justify-center w-full",
+        if(@full_width, do: "max-w-unset", else: "max-w-[1280px]")
+      ]}>
         <div class="space-y-6 w-full ">
           {render_slot(@inner_block)}
         </div>
@@ -101,7 +105,8 @@ defmodule CometWeb.Layouts do
   def sidebar(assigns) do
     top_menu = [
       {"Backlog", ~p"/backlog", "lucide-gamepad-2"},
-      {"Browser", ~p"/browser", "lucide-file-search"}
+      {"Browser", ~p"/browser", "lucide-file-search"},
+      {"Tags", ~p"/tags", "lucide-tag"}
     ]
 
     bottom_menu = [
@@ -114,7 +119,7 @@ defmodule CometWeb.Layouts do
     ~H"""
     <div class="sidebar drawer lg:drawer-open">
       <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
-      <div class="drawer-content flex flex-col">
+      <div class="drawer-content flex flex-col items-center">
         <label for="my-drawer-2" class="btn btn-primary drawer-button lg:hidden">
           Open drawer
         </label>
@@ -206,5 +211,13 @@ defmodule CometWeb.Layouts do
 
   defp topbar_module("browser") do
     {"Browser", []}
+  end
+
+  defp topbar_module("tags") do
+    {"Tags",
+     [
+       {"Platforms", ~p"/tags/platforms"},
+       {"Statuses", ~p"/tags/statuses"}
+     ]}
   end
 end

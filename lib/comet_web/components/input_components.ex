@@ -11,8 +11,8 @@ defmodule CometWeb.InputComponents do
 
   attr :type, :string,
     default: "text",
-    values: ~w(checkbox color date datetime-local email file month number password
-               search select tel text textarea time url week)
+    values: ~w(checkbox date datetime-local email file month number password
+               search select tel text textarea time url week color)
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
@@ -24,6 +24,7 @@ defmodule CometWeb.InputComponents do
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
   attr :class, :string, default: nil, doc: "the input class to extend defaults"
   attr :fieldset_class, :string, default: nil, doc: "the fieldset class to extend defaults"
+  attr :data, :any, default: nil, doc: "specific data-attrs"
 
   attr :label_wrapper_class, :string,
     default: nil,
@@ -34,7 +35,7 @@ defmodule CometWeb.InputComponents do
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
-                multiple pattern placeholder readonly required rows size step)
+                multiple pattern placeholder readonly required rows size step data_*)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
@@ -109,6 +110,40 @@ defmodule CometWeb.InputComponents do
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
+    """
+  end
+
+  def input(%{type: "color"} = assigns) do
+    targets =
+      if extra_targets = assigns.data[:targets],
+        do: [%{type: :input, id: assigns.id} | extra_targets],
+        else: [%{type: :input, id: assigns.id}]
+
+    assigns = assigns |> assign(:targets, targets)
+
+    ~H"""
+    <iv class={["fieldset", @fieldset_class]}>
+      <label>
+        <span :if={@label} class="label mb-1">{@label}</span>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            name={@name}
+            id={@id}
+            value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+            class={["w-full input", @class, @errors != [] && (@error_class || "input-error")]}
+            {@rest}
+          />
+          <div
+            id={"#{@id}_picker"}
+            data-value={@value}
+            data-targets={Jason.encode!(@targets)}
+            phx-hook="ColorPicker"
+          />
+        </div>
+      </label>
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </iv>
     """
   end
 

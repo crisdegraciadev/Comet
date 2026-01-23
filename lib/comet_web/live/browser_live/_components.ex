@@ -2,8 +2,11 @@ defmodule CometWeb.Live.BrowserLive.Components do
   use Phoenix.Component
   use CometWeb, :html
 
+  alias Comet.Accounts.User
   alias Comet.Games.Game
-  alias Comet.Services.Constants
+  alias Comet.Tags
+
+  alias CometWeb.Utils
   alias CometWeb.LiveComponents.SGDBGameCardComponent
 
   attr :api_key, :string, default: nil
@@ -85,20 +88,16 @@ defmodule CometWeb.Live.BrowserLive.Components do
 
   attr :sgdb_game, :map, required: true
   attr :query, :string, required: true
-  attr :current_scope, :map, required: true
+  attr :user, User, required: true
 
   def add_game_modal(assigns) do
-    changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
+    changeset = Game.Command.change(%Game{}, assigns.user)
 
-    platforms = Constants.platforms(:values)
+    platforms = Tags.all_platforms(assigns.user)
+    default_platform = Enum.at(platforms, 0).id
 
-    {_, default_platform} =
-      Enum.find(platforms, Enum.at(platforms, 0), fn {_, value} -> value == :pc end)
-
-    statuses = Constants.statuses(:values)
-
-    {_, default_status} =
-      Enum.find(statuses, Enum.at(statuses, 0), fn {_, value} -> value == :pending end)
+    statuses = Tags.all_statuses(assigns.user)
+    default_status = Enum.at(statuses, 0).id
 
     assigns =
       assigns
@@ -124,18 +123,18 @@ defmodule CometWeb.Live.BrowserLive.Components do
 
         <div class="flex gap-2">
           <.input
-            field={@form[:platform]}
+            field={@form[:platform_id]}
             type="select"
             label="Platform"
-            options={@platforms}
+            options={Utils.Input.tag_to_select(@platforms)}
             value={@default_platform}
             fieldset_class="grow"
           />
           <.input
-            field={@form[:status]}
+            field={@form[:status_id]}
             type="select"
             label="Status"
-            options={@statuses}
+            options={Utils.Input.tag_to_select(@statuses)}
             value={@default_status}
             fieldset_class="grow"
           />

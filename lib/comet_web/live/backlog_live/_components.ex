@@ -2,10 +2,27 @@ defmodule CometWeb.Live.BacklogLive.Components do
   use Phoenix.Component
   use CometWeb, :html
 
-  alias Comet.Accounts.Preferences
-  alias Comet.Games
+  alias Comet.Accounts
   alias Comet.Games.Game
-  alias Comet.Services.Constants
+  alias Comet.Tags
+
+  alias CometWeb.Utils
+
+  @groups %{
+    platform: {"Platform", :platform},
+    status: {"Status", :status}
+  }
+
+  @sorts %{
+    name: {"Name", :name},
+    platform: {"Platform", :platform},
+    status: {"Status", :status}
+  }
+
+  @orders %{
+    asc: {"Asc", :asc},
+    desc: {"Desc", :desc}
+  }
 
   def filters(assigns) do
     form =
@@ -21,11 +38,11 @@ defmodule CometWeb.Live.BacklogLive.Components do
     assigns =
       assign(assigns, %{
         form: form,
-        platforms: Constants.platforms(:values),
-        statuses: Constants.statuses(:values),
-        groups: Constants.groups(:values),
-        sorts: Constants.sorts(:values),
-        orders: Constants.orders(:values)
+        platforms: Tags.all_platforms(assigns.user),
+        statuses: Tags.all_statuses(assigns.user),
+        groups: Map.values(@groups),
+        sorts: Map.values(@sorts),
+        orders: Map.values(@orders)
       })
 
     ~H"""
@@ -34,15 +51,15 @@ defmodule CometWeb.Live.BacklogLive.Components do
         <.input field={@form[:name]} fieldset_class="grow" placeholder="Search" autocomplete="off" />
 
         <.input
-          field={@form[:platform]}
+          field={@form[:platform_id]}
           type="select"
-          options={@platforms}
+          options={Utils.Input.tag_to_select(@platforms)}
           prompt="Platform"
         />
         <.input
-          field={@form[:status]}
+          field={@form[:status_id]}
           type="select"
-          options={@statuses}
+          options={Utils.Input.tag_to_select(@statuses)}
           prompt="Status"
         />
       </div>
@@ -78,40 +95,7 @@ defmodule CometWeb.Live.BacklogLive.Components do
   end
 
   attr :streams, :any, required: true
-  attr :preferences, Preferences, required: true
-
-  def in_progress_game_list(assigns) do
-    ~H"""
-    <div
-      id="in-progress-game-list-toggle"
-      class="collapse collapse-arrow bg-cm-black-200 border border-base-300"
-      phx-hook="Collapse"
-    >
-      <div class="collapse-title font-semibold cursor-pointer">Currently Playing</div>
-      <div class="collapse-content">
-        <div class="flex flex-col gap-2">
-          <div
-            class="flex gap-4 "
-            id="in_progress_games"
-            phx-update="stream"
-          >
-            <p id="empty" class="only:flex hidden text-white">Ready for your next adventure?</p>
-            <.game_card
-              :for={{dom_id, game} <- @streams.in_progress_game_list}
-              class="max-w-[140px] !bg-cm-black-100"
-              id={dom_id}
-              game={game}
-              preferences={%{@preferences | assets: :cover}}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-    """
-  end
-
-  attr :streams, :any, required: true
-  attr :preferences, Preferences, required: true
+  attr :preferences, Accounts.Preferences, required: true
 
   def game_list(assigns) do
     grid_cols =
@@ -138,72 +122,9 @@ defmodule CometWeb.Live.BacklogLive.Components do
         id={dom_id}
         game={game}
         preferences={@preferences}
+        path_link={~p"/backlog/#{game}"}
       />
     </div>
-    """
-  end
-
-  attr :id, :string, required: true
-  attr :game, Games.Game
-  attr :preferences, Preferences, required: true
-  attr :class, :string, default: nil
-
-  def game_card(%{preferences: %{assets: :cover}} = assigns) do
-    ~H"""
-    <.link id={@id} patch={~p"/backlog/#{@game}"}>
-      <div class={[
-        "rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative",
-        @class
-      ]}>
-        <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
-          <.status_badge status={@game.status} />
-          <.platform_badge platform={@game.platform} />
-        </div>
-        <img
-          class={[
-            "aspect-2/3 ",
-            if(!@preferences.show_name, do: "rounded-md", else: "rounded-tl-md rounded-tr-md")
-          ]}
-          src={@game.cover}
-        />
-        <span class={[
-          "font-semibold text-sm truncate px-2 text-center pb-2",
-          !@preferences.show_name && "!hidden"
-        ]}>
-          {@game.name}
-        </span>
-      </div>
-    </.link>
-    """
-  end
-
-  def game_card(%{preferences: %{assets: :hero}} = assigns) do
-    ~H"""
-    <.link id={@id} patch={~p"/backlog/#{@game}"}>
-      <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative aspect-96/31">
-        <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
-          <.status_badge status={@game.status} />
-          <.platform_badge platform={@game.platform} />
-        </div>
-
-        <div
-          :if={@game.hero == nil}
-          class="w-full h-full flex flex-col items-center justify-center bg-cm-black-100"
-        >
-        </div>
-
-        <img
-          class="rounded-tl-md rounded-tr-md"
-          src={@game.hero}
-        />
-        <span class={[
-          "font-semibold text-sm truncate px-2 text-center pb-2",
-          !@preferences.show_name && "!hidden"
-        ]}>
-          {@game.name}
-        </span>
-      </div>
-    </.link>
     """
   end
 
@@ -228,11 +149,11 @@ defmodule CometWeb.Live.BacklogLive.Components do
       <div class="flex flex-col gap-2 rounded-box bg-cm-black-100 border border-cm-black-300  p-4">
         <div class="grid grid-cols-2">
           <span><.icon name="lucide-circle-stack" class="mr-2 size-4" /> Status</span>
-          <.status_badge status={@game.status} />
+          <.tag_badge tag={@game.status} />
         </div>
         <div class="grid grid-cols-2">
           <span><.icon name="lucide-computer-desktop" class="mr-2 size-4" />Platform</span>
-          <.platform_badge platform={@game.platform} />
+          <.tag_badge tag={@game.platform} />
         </div>
         <div class="grid grid-cols-2">
           <span><.icon name="lucide-calendar" class="mr-2 size-4" />Purchased</span>
@@ -273,16 +194,14 @@ defmodule CometWeb.Live.BacklogLive.Components do
   end
 
   attr :game, Games.Game
-  attr :current_scope, :map, required: true
+  attr :user, Accounts.User, required: true
+  attr :platforms, :list, required: true
+  attr :statuses, :list, required: true
 
   def edit_game_modal(assigns) do
-    changeset = Game.Command.change(%Game{}, assigns.current_scope.user)
+    changeset = Game.Command.change(%Game{}, assigns.user)
 
-    assigns =
-      assigns
-      |> assign(:form, to_form(changeset))
-      |> assign(:platforms, Constants.platforms(:values))
-      |> assign(:statuses, Constants.statuses(:values))
+    assigns = assigns |> assign(:form, to_form(changeset))
 
     ~H"""
     <.game_modal
@@ -292,7 +211,7 @@ defmodule CometWeb.Live.BacklogLive.Components do
     >
       <:actions>
         <.button variant="btn-secondary" patch={~p"/backlog/#{@game.id}/images/edit"}>
-          <.icon name="lucide-file-image" /> Imagescollection/5
+          <.icon name="lucide-file-image" /> Images
         </.button>
       </:actions>
 
@@ -306,19 +225,19 @@ defmodule CometWeb.Live.BacklogLive.Components do
 
         <div class="flex gap-2">
           <.input
-            field={@form[:platform]}
+            field={@form[:platform_id]}
             type="select"
             label="Platform"
-            options={@platforms}
-            value={@game.platform}
+            options={Utils.Input.tag_to_select(@platforms)}
+            value={@game.platform_id}
             fieldset_class="grow"
           />
           <.input
-            field={@form[:status]}
+            field={@form[:status_id]}
             type="select"
             label="Status"
-            options={@statuses}
-            value={@game.status}
+            options={Utils.Input.tag_to_select(@statuses)}
+            value={@game.status_id}
             fieldset_class="grow"
           />
         </div>
