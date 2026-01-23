@@ -11,8 +11,8 @@ defmodule CometWeb.InputComponents do
 
   attr :type, :string,
     default: "text",
-    values: ~w(checkbox color date datetime-local email file month number password
-               search select tel text textarea time url week)
+    values: ~w(checkbox date datetime-local email file month number password
+               search select tel text textarea time url week color)
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
@@ -106,6 +106,28 @@ defmodule CometWeb.InputComponents do
           class={["w-full textarea", @class, @errors != [] && (@error_class || "textarea-error")]}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+      </label>
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </div>
+    """
+  end
+
+  def input(%{type: "color"} = assigns) do
+    ~H"""
+    <div class={["fieldset", @fieldset_class]}>
+      <label>
+        <span :if={@label} class="label mb-1">{@label}</span>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            name={@name}
+            id={@id}
+            value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+            class={["w-full input", @class, @errors != [] && (@error_class || "input-error")]}
+            {@rest}
+          />
+          <div id={"#{@id}_picker"} data-target={@id} data-value={@value} phx-hook="ColorPicker" />
+        </div>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>

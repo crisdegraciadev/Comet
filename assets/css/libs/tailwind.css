@@ -14,6 +14,5 @@
 
   --color-cm-white: var(--color-white);
 
-  --text-cm-sm: var(--font-size-s)
-  --text-cm-base: var(--font-size-m)
+  --text-cm-sm: var(--font-size-s) --text-cm-base: var(--font-size-m);
 }

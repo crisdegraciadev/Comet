@@ -3,6 +3,7 @@ defmodule Comet.Accounts do
 
   alias Comet.Repo
   alias Comet.Accounts.{User, UserToken, Profile, Preferences}
+  alias Comet.Tags.{Status, Platform}
 
   def get_user_by_email(email) when is_binary(email) do
     Repo.get_by(User, email: email)
@@ -26,6 +27,28 @@ defmodule Comet.Accounts do
     |> Preferences.changeset(%{cols: 10, assets: :cover, name: true}, %{user: user})
   end
 
+  def build_status_tags(user) do
+    defaults = [
+      %{label: "Completed", foreground: "#f4fff7", background: "#297373;"},
+      %{label: "In Progress", foreground: "#fffbea", background: "#e97e32"},
+      %{label: "Pending", foreground: "#f5f8ff", background: "#2c74a0"}
+    ]
+
+    defaults |> Enum.map(fn attrs -> Status.changeset(%Status{}, attrs, %{user: user}) end)
+  end
+
+  def build_platforms_tags(user) do
+    defaults = [
+      %{label: "PC", foreground: "#f9f9f9", background: "#314157;"},
+      %{label: "PS3", foreground: "#f9f9f9", background: "#314157;"},
+      %{label: "Switch", foreground: "#f9f9f9", background: "#314157;"},
+      %{label: "N64", foreground: "#f9f9f9", background: "#314157;"},
+      %{label: "PSX", foreground: "#f9f9f9", background: "#314157;"}
+    ]
+
+    defaults |> Enum.map(fn attrs -> Platform.changeset(%Platform{}, attrs, %{user: user}) end)
+  end
+
   def register_user(attrs) do
     Repo.transaction(fn ->
       changeset =
@@ -36,6 +59,8 @@ defmodule Comet.Accounts do
       with {:ok, user} <- Repo.insert(changeset) do
         build_profile(user) |> Repo.insert()
         build_preferences(user) |> Repo.insert()
+        build_status_tags(user) |> Enum.each(fn t -> Repo.insert(t) end)
+        build_platforms_tags(user) |> Enum.each(fn t -> Repo.insert(t) end)
 
         {:ok, user}
       else
