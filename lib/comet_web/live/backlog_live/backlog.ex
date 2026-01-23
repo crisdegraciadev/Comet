@@ -1,9 +1,11 @@
 defmodule CometWeb.BacklogLive.Backlog do
   use CometWeb, :live_view
 
+
   alias Comet.Accounts.Preferences
   alias Comet.Games.Game
-  alias CometWeb.LiveComponents.ImageSelectorComponent
+  alias CometWeb.Layouts
+  alias CometWeb.LiveComponents.ImageSelectorComponent 
 
   import CometWeb.Live.BacklogLive.Components
 
@@ -15,7 +17,8 @@ defmodule CometWeb.BacklogLive.Backlog do
     <Layouts.app
       flash={@flash}
       current_scope={@current_scope}
-      current_module={["backlog", "collection"]}
+      current_module={["backlog"]}
+      full_width={true}
     >
       <div id="backlog-page" class="flex flex-col gap-4" phx-hook="PreserveScroll">
         <.in_progress_game_list streams={@streams} preferences={@preferences} />

@@ -3,7 +3,6 @@ defmodule CometWeb.Live.BacklogLive.Components do
   use CometWeb, :html
 
   alias Comet.Accounts.Preferences
-  alias Comet.Games
   alias Comet.Games.Game
   alias Comet.Services.Constants
 
@@ -82,31 +81,25 @@ defmodule CometWeb.Live.BacklogLive.Components do
 
   def in_progress_game_list(assigns) do
     ~H"""
-    <div
-      id="in-progress-game-list-toggle"
-      class="collapse collapse-arrow bg-cm-black-200 border border-base-300"
-      phx-hook="Collapse"
-    >
-      <div class="collapse-title font-semibold cursor-pointer">Currently Playing</div>
-      <div class="collapse-content">
-        <div class="flex flex-col gap-2">
-          <div
-            class="flex gap-4 "
-            id="in_progress_games"
-            phx-update="stream"
-          >
-            <p id="empty" class="only:flex hidden text-white">Ready for your next adventure?</p>
-            <.game_card
-              :for={{dom_id, game} <- @streams.in_progress_game_list}
-              class="max-w-[140px] !bg-cm-black-100"
-              id={dom_id}
-              game={game}
-              preferences={%{@preferences | assets: :cover}}
-            />
-          </div>
+    <.collapse id="in-progress-game-list-collapse" title="Currently playing">
+      <div class="flex flex-col gap-2">
+        <div
+          class="flex gap-4 "
+          id="in-progress-games-stream"
+          phx-update="stream"
+        >
+          <p id="empty" class="only:flex hidden text-white">Ready for your next adventure?</p>
+          <.game_card
+            :for={{dom_id, game} <- @streams.in_progress_game_list}
+            class="max-w-[140px] !bg-cm-black-100"
+            id={dom_id}
+            game={game}
+            preferences={@preferences}
+            path_link={~p"/backlog/#{game}"}
+          />
         </div>
       </div>
-    </div>
+    </.collapse>
     """
   end
 
@@ -138,72 +131,9 @@ defmodule CometWeb.Live.BacklogLive.Components do
         id={dom_id}
         game={game}
         preferences={@preferences}
+        path_link={~p"/backlog/#{game}"}
       />
     </div>
-    """
-  end
-
-  attr :id, :string, required: true
-  attr :game, Games.Game
-  attr :preferences, Preferences, required: true
-  attr :class, :string, default: nil
-
-  def game_card(%{preferences: %{assets: :cover}} = assigns) do
-    ~H"""
-    <.link id={@id} patch={~p"/backlog/#{@game}"}>
-      <div class={[
-        "rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative",
-        @class
-      ]}>
-        <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
-          <.status_badge status={@game.status} />
-          <.platform_badge platform={@game.platform} />
-        </div>
-        <img
-          class={[
-            "aspect-2/3 ",
-            if(!@preferences.show_name, do: "rounded-md", else: "rounded-tl-md rounded-tr-md")
-          ]}
-          src={@game.cover}
-        />
-        <span class={[
-          "font-semibold text-sm truncate px-2 text-center pb-2",
-          !@preferences.show_name && "!hidden"
-        ]}>
-          {@game.name}
-        </span>
-      </div>
-    </.link>
-    """
-  end
-
-  def game_card(%{preferences: %{assets: :hero}} = assigns) do
-    ~H"""
-    <.link id={@id} patch={~p"/backlog/#{@game}"}>
-      <div class="rounded-md flex flex-col gap-2 game-cover-shadow border border-cm-black-300 bg-cm-black-200 relative aspect-96/31">
-        <div class="absolute top-2 left-2 flex gap-1 flex-col z-1">
-          <.status_badge status={@game.status} />
-          <.platform_badge platform={@game.platform} />
-        </div>
-
-        <div
-          :if={@game.hero == nil}
-          class="w-full h-full flex flex-col items-center justify-center bg-cm-black-100"
-        >
-        </div>
-
-        <img
-          class="rounded-tl-md rounded-tr-md"
-          src={@game.hero}
-        />
-        <span class={[
-          "font-semibold text-sm truncate px-2 text-center pb-2",
-          !@preferences.show_name && "!hidden"
-        ]}>
-          {@game.name}
-        </span>
-      </div>
-    </.link>
     """
   end
 
@@ -292,7 +222,7 @@ defmodule CometWeb.Live.BacklogLive.Components do
     >
       <:actions>
         <.button variant="btn-secondary" patch={~p"/backlog/#{@game.id}/images/edit"}>
-          <.icon name="lucide-file-image" /> Imagescollection/5
+          <.icon name="lucide-file-image" /> Images
         </.button>
       </:actions>
 

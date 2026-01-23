@@ -41,7 +41,7 @@ defmodule CometWeb.LiveComponents.SGDBGameCardComponent do
           <img
             :if={covers != []}
             class="rounded-tl-md rounded-tr-md"
-            src={Game.Utils.main_asset_url(covers)}
+            src={CometWeb.Utils.Assets.main_asset_url(covers)}
             alt={@sgdb_game.name}
           />
         </.async_result>
