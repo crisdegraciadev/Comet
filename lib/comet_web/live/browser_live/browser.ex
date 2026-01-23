@@ -14,7 +14,7 @@ defmodule CometWeb.BrowserLive.Browser do
     <Layouts.app
       flash={@flash}
       current_scope={@current_scope}
-      current_module={["browser", "collection"]}
+      current_module={["browser"]}
     >
       <.search_form api_key={@api_key} query={assigns[:query]} />
       <.search_results
@@ -27,7 +27,7 @@ defmodule CometWeb.BrowserLive.Browser do
       <.add_game_modal
         :if={@live_action == :new}
         sgdb_game={@sgdb_game}
-        current_scope={@current_scope}
+        user={@current_scope.user}
         query={@query}
       />
     </Layouts.app>

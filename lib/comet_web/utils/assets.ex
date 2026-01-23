@@ -1,4 +1,4 @@
-defmodule Comet.Games.Game.Utils do
+defmodule CometWeb.Utils.Assets do
   def main_asset_url([]), do: nil
 
   def main_asset_url(assets) do

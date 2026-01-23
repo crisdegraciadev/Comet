@@ -1,8 +1,8 @@
 defmodule CometWeb.Live.BrowserLive.Helpers do
   use CometWeb, :live_view
 
-  alias Comet.Games.Game
-  alias Comet.Services.SGDB
+  alias Comet.Games.Game.SGDB
+  alias CometWeb.Utils
 
   def assign_game(%{assigns: %{api_key: api_key}} = socket, id) do
     {:ok, %{game: %{id: id, name: name}}} = SGDB.get_game(id, api_key)
@@ -12,8 +12,8 @@ defmodule CometWeb.Live.BrowserLive.Helpers do
     sgdb_game = %{
       id: id,
       name: name,
-      cover: Game.Utils.main_asset_url(covers),
-      hero: Game.Utils.main_asset_url(heroes)
+      cover: Utils.Assets.main_asset_url(covers),
+      hero: Utils.Assets.main_asset_url(heroes)
     }
 
     assign(socket, :sgdb_game, sgdb_game)

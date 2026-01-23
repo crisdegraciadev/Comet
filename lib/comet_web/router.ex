@@ -56,6 +56,12 @@ defmodule CometWeb.Router do
       live "/:id/new", BrowserLive.Browser, :new
     end
 
+    scope "/tags" do
+      live "/", TagsLive.Tags
+      live "/platforms", TagsLive.Platforms
+      live "/statuses", TagsLive.Statuses
+    end
+
     post "/users/update-password", UserSessionController, :update_password
   end
 

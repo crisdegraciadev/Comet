@@ -4,7 +4,7 @@
   },
   "dependencies": {
     "@simonwep/pickr": "^1.9.1",
-    "daisyui": "^5.0.50"
+    "daisyui": "^5.5.14"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
