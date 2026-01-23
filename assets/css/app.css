@@ -1,5 +1,6 @@
 @import "./libs/daisyui.css";
 @import "./libs/lucide.css";
+@import "./libs/pickr.css";
 @import "./libs/tailwind.css";
 
 @import "./core/config.css";
@@ -7,6 +8,7 @@
 @import "./core/vars.css";
 
 @import "./components/button.css";
+@import "./components/color-picker.css";
 @import "./components/game-cover.css";
 @import "./components/input.css";
 @import "./components/menu.css";

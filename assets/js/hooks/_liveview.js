@@ -1,16 +1,17 @@
-/* eslint-disable no-undef */
 // Establish Phoenix Socket and LiveView configuration.
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import { hooks as colocatedHooks } from "phoenix-colocated/comet";
 
 import { PreserveScroll } from "./preserve-scroll";
+import { ColorPicker } from "./color-picker";
 import { Collapse } from "./collpase";
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
 
 let Hooks = {
   PreserveScroll,
+  ColorPicker,
   Collapse,
 };
 

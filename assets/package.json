@@ -3,6 +3,7 @@
     "format": "prettier --write ./js/*.js ./js/*/*.js && eslint --fix ./js/*.js ./js/*/*.js"
   },
   "dependencies": {
+    "@simonwep/pickr": "^1.9.1",
     "daisyui": "^5.0.50"
   },
   "devDependencies": {

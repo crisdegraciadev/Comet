@@ -1,0 +1,25 @@
+.color-picker {
+  --border-color: color-mix(in oklab, var(--color-base-content) 20%, #0000);
+
+  display: flex;
+  border: var(--border) solid var(--border-color);
+  border-radius: var(--radius-field);
+
+  background-color: var(--color-base-100);
+
+  .label {
+    padding: 6px var(--space-2xl) 6px 12px;
+    flex: 1;
+    position: relative;
+
+    &:after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0px;
+      width: var(--border);
+      height: 100%;
+      background-color: var(--border-color);
+    }
+  }
+}

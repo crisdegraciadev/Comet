@@ -1,0 +1,22 @@
+@import "@simonwep/pickr/dist/themes/nano.min.css";
+
+.pickr {
+  width: 100%;
+  height: 100%;
+
+  .pcr-button {
+    width: 33px;
+    height: inherit;
+
+    &:before {
+      content: unset;
+    }
+  }
+
+  .pcr-button,
+  .pcr-button::after {
+    border-radius: var(--radius-field);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
