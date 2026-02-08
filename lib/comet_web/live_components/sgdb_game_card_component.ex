@@ -1,7 +1,6 @@
 defmodule CometWeb.LiveComponents.SGDBGameCardComponent do
   use CometWeb, :live_component
 
-  alias Comet.Games.Game
   alias Comet.Games.Game.SGDB
 
   attr :sgdb_game, :map, required: true

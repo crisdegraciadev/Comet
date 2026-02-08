@@ -66,7 +66,7 @@ defmodule CometWeb.Router do
         live "/:id/edit", TagsLive.Platforms, :edit
       end
 
-      scope "/statuses", TagsLive.Statuses do
+      scope "/statuses" do
         live "/", TagsLive.Statuses
         live "/new", TagsLive.Statuses, :new
         live "/:id/delete", TagsLive.Statuses, :delete

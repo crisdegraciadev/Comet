@@ -73,7 +73,7 @@ defmodule CometWeb.Live.TagsLive.Components do
       </:body>
       <:footer>
         <.button variant="btn-primary" type="submit" form="edit-tag-form">
-          Edit
+          Save
         </.button>
         <.button variant="btn-error" patch={tag_route(nil, @type, :list)}>
           Cancel

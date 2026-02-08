@@ -6,7 +6,6 @@ defmodule CometWeb.GameComponents do
 
   alias Comet.Accounts
   alias Comet.Games
-  alias Comet.Tags
 
   attr :id, :string, required: true
   attr :game, :map, required: true

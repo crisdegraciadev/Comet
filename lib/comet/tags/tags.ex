@@ -18,14 +18,14 @@ defmodule Comet.Tags do
   end
 
   def change_status(%Tags.Status{} = status, %Accounts.User{} = user, attrs \\ %{}) do
-    Tags.Platform.changeset(status, attrs, %{user: user})
+    Tags.Status.changeset(status, attrs, %{user: user})
   end
 
   def update_platform(%Tags.Platform{} = platform, %Accounts.User{} = user, attrs) do
     platform |> change_platform(user, attrs) |> Repo.update()
   end
 
-  def update_status(%Tags.Platform{} = status, %Accounts.User{} = user, attrs) do
+  def update_status(%Tags.Status{} = status, %Accounts.User{} = user, attrs) do
     status |> change_status(user, attrs) |> Repo.update()
   end
 
@@ -33,8 +33,8 @@ defmodule Comet.Tags do
     platform |> change_platform(user) |> Repo.delete()
   end
 
-  def delete_status(%Tags.Status{} = status) do
-    Repo.delete(status)
+  def delete_status(%Tags.Status{} = status, %Accounts.User{} = user) do
+    status |> change_status(user) |> Repo.delete()
   end
 
   def all_statuses(%Accounts.User{id: user_id}),

@@ -41,6 +41,14 @@ defmodule Comet.Games.Game.Query do
     |> Map.new()
   end
 
+  def count_by_status(%User{id: user_id}) do
+    Game
+    |> for_user(user_id)
+    |> count_by(:status_id)
+    |> Repo.all()
+    |> Map.new()
+  end
+
   defp for_user(query, user_id) do
     where(query, [g], g.user_id == ^user_id)
   end

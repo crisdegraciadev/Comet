@@ -19,6 +19,11 @@ defmodule Comet.Tags.Status do
     status
     |> cast(attrs, [:label, :foreground, :background])
     |> validate_required([:label, :foreground, :background])
+    |> unique_constraint(:label, message: "Status with this label already exists.")
+    |> foreign_key_constraint(:base,
+      name: "games_status_id_fkey",
+      message: "Status is used in some games."
+    )
     |> put_change(:user_id, user_scope.user.id)
   end
 end

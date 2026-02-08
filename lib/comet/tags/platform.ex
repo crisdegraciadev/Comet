@@ -20,7 +20,10 @@ defmodule Comet.Tags.Platform do
     |> cast(attrs, [:label, :foreground, :background])
     |> validate_required([:label, :foreground, :background])
     |> unique_constraint(:label, message: "Platform with this label already exists.")
-    |> foreign_key_constraint(:base, name: "games_platform_id_fkey", message: "Platform is used in some games.")
+    |> foreign_key_constraint(:base,
+      name: "games_platform_id_fkey",
+      message: "Platform is used in some games."
+    )
     |> put_change(:user_id, user_scope.user.id)
   end
 end

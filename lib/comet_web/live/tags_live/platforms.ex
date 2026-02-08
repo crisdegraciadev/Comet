@@ -123,7 +123,7 @@ defmodule CometWeb.TagsLive.Platforms do
       {:error, changeset} ->
         {:noreply, socket |> assign(:changeset, changeset)}
 
-      {:ok, updated_platform} ->
+      {:ok, _} ->
         {:noreply,
          socket
          |> assign_platforms()
@@ -133,7 +133,7 @@ defmodule CometWeb.TagsLive.Platforms do
   end
 
   @impl true
-  def handle_event("delete", %{"id" => id}, %{assigns: %{current_scope: %{user: user}}} = socket) do
+  def handle_event("delete", _params, socket) do
     user = socket.assigns.user
     platform = socket.assigns.platform
 
@@ -141,7 +141,7 @@ defmodule CometWeb.TagsLive.Platforms do
       {:error, changeset} ->
         {:noreply, socket |> assign(:changeset, changeset)}
 
-      {:ok, updated_platform} ->
+      {:ok, _} ->
         {:noreply,
          socket
          |> assign_platforms()
