@@ -137,7 +137,7 @@ defmodule CometWeb.Layouts do
               </div>
               <div class="flex flex-col">
                 <span class="font-bold text-base">Comet</span>
-                <span class="text-xs text-base-content/40">Beta 0.0.1</span>
+                <span class="text-xs text-base-content/40">Beta 1.0.0</span>
               </div>
             </div>
 
