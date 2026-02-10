@@ -60,7 +60,7 @@ defmodule CometWeb.TagsLive.Platforms do
   @impl true
   def mount(_params, _session, %{assigns: %{current_scope: current_scope}} = socket) do
     user = Accounts.get_user_with_profile!(current_scope.user.id)
-    preferences = Accounts.Preferences.Query.get!(user)
+    preferences = Accounts.get_account_preferences!(user)
 
     socket =
       socket
@@ -168,7 +168,7 @@ defmodule CometWeb.TagsLive.Platforms do
 
   defp assign_platforms(socket) do
     user = socket.assigns.user
-    platform_count = Games.Game.Query.count_by_platform(user)
+    platform_count = Games.count_games_by_platform(user)
 
     platforms =
       Tags.all_platforms(user)

@@ -2,8 +2,8 @@ defmodule CometWeb.Live.BrowserLive.Components do
   use Phoenix.Component
   use CometWeb, :html
 
-  alias Comet.Accounts.User
-  alias Comet.Games.Game
+  alias Comet.Accounts
+  alias Comet.Games
   alias Comet.Tags
 
   alias CometWeb.Utils
@@ -88,10 +88,10 @@ defmodule CometWeb.Live.BrowserLive.Components do
 
   attr :sgdb_game, :map, required: true
   attr :query, :string, required: true
-  attr :user, User, required: true
+  attr :user, Accounts.User, required: true
 
   def add_game_modal(assigns) do
-    changeset = Game.Command.change(%Game{}, assigns.user)
+    changeset = Games.change_game(%Games.Game{}, assigns.user)
 
     platforms = Tags.all_platforms(assigns.user)
     default_platform = Enum.at(platforms, 0).id

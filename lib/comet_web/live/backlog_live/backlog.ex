@@ -51,12 +51,12 @@ defmodule CometWeb.BacklogLive.Backlog do
   def mount(_params, _session, %{assigns: %{current_scope: %{user: user}}} = socket) do
     user = Comet.Repo.preload(user, :profile)
 
-    preferences = Accounts.Preferences.Query.get!(user)
+    preferences = Accounts.get_account_preferences!(user)
 
     statuses = Tags.all_statuses(user)
     platforms = Tags.all_platforms(user)
 
-    game_list = Games.Game.Query.all(user, %{"sort" => "status", "order" => "asc"})
+    game_list = Games.all_games(user, %{"sort" => "status", "order" => "asc"})
 
     socket =
       socket
@@ -76,7 +76,7 @@ defmodule CometWeb.BacklogLive.Backlog do
         %{assigns: %{live_action: live_action, current_scope: %{user: user}}} = socket
       )
       when live_action in [:show, :edit, :delete, :images_edit] do
-    game = Games.Game.Query.get!(user, String.to_integer(id))
+    game = Games.get_game!(user, String.to_integer(id))
 
     {:noreply, assign(socket, :game, game)}
   end
@@ -91,7 +91,7 @@ defmodule CometWeb.BacklogLive.Backlog do
     socket =
       socket
       |> assign(:form, to_form(params))
-      |> stream(:game_list, Games.Game.Query.all(user, params), reset: true)
+      |> stream(:game_list, Games.all_games(user, params), reset: true)
 
     {:noreply, socket}
   end
@@ -102,20 +102,20 @@ defmodule CometWeb.BacklogLive.Backlog do
         params,
         %{assigns: %{preferences: preferences, current_scope: %{user: user}}} = socket
       ) do
-    {:ok, updated_preferences} = Accounts.Preferences.Command.update(preferences, user, params)
+    {:ok, updated_preferences} = Accounts.update_account_preferences(preferences, user, params)
 
     socket =
       socket
       |> assign(:preferences, updated_preferences)
-      |> stream(:game_list, Games.Game.Query.all(user))
+      |> stream(:game_list, Games.all_games(user))
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, %{assigns: %{current_scope: %{user: user}}} = socket) do
-    game = Games.Game.Query.get!(user, id)
-    Games.Game.Command.delete!(game)
+    game = Games.get_game!(user, id)
+    Games.delete_game!(game)
 
     socket =
       socket
@@ -132,9 +132,9 @@ defmodule CometWeb.BacklogLive.Backlog do
         %{"game" => game_params},
         %{assigns: %{game: game, current_scope: %{user: user}}} = socket
       ) do
-    {:ok, updated_game} = Games.Game.Command.update(game, user, game_params)
+    {:ok, updated_game} = Games.update_game(game, user, game_params)
 
-    game = Games.Game.Query.get!(user, updated_game.id)
+    game = Games.get_game!(user, updated_game.id)
 
     socket =
       socket

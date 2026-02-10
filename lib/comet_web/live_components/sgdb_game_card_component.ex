@@ -1,7 +1,7 @@
 defmodule CometWeb.LiveComponents.SGDBGameCardComponent do
   use CometWeb, :live_component
 
-  alias Comet.Games.Game.SGDB
+  alias Comet.Games
 
   attr :sgdb_game, :map, required: true
   attr :api_key, :string, required: true
@@ -16,7 +16,7 @@ defmodule CometWeb.LiveComponents.SGDBGameCardComponent do
     socket =
       socket
       |> assign(:sgdb_game, sgdb_game)
-      |> assign_async(:covers, fn -> SGDB.get_covers(sgdb_game.id, api_key) end)
+      |> assign_async(:covers, fn -> Games.get_sgdb_covers(sgdb_game.id, api_key) end)
 
     {:ok, socket}
   end

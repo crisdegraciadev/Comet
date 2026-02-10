@@ -81,8 +81,6 @@ defmodule CometWeb.GameComponents do
   attr :class, :string, default: nil
 
   def game_card(%{preferences: %{assets: :cover}} = assigns) do
-    IO.inspect(assigns.game)
-
     ~H"""
     <.link id={@id} patch={@path_link}>
       <div class={[

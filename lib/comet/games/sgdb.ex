@@ -1,4 +1,4 @@
-defmodule Comet.Games.Game.SGDB do
+defmodule Comet.Games.SGDB do
   @moduledoc """
   Service for interacting with the SteamGridDB API.
   Documentation: https://www.steamgriddb.com/api/v2
@@ -9,9 +9,9 @@ defmodule Comet.Games.Game.SGDB do
   @api_v2 "https://www.steamgriddb.com/api/v2"
   @public_api "https://www.steamgriddb.com/api/public"
 
-  def search(term, _) when byte_size(term) == 0, do: {:error, "Empty search term"}
+  def search_sgdb_games(term) when byte_size(term) == 0, do: {:error, "Empty search term"}
 
-  def search(term) do
+  def search_sgdb_games(term) do
     case Cache.get(search_key(term)) do
       nil -> sgdb_search(term)
       value -> {:ok, value}
@@ -49,21 +49,21 @@ defmodule Comet.Games.Game.SGDB do
     ordered_results
   end
 
-  def get_game(id, api_key) do
+  def get_sgdb_game(id, api_key) do
     case Cache.get(game_key(id)) do
       nil -> fetch(game_key(id), game_url(id), :game, api_key, &parse_game/1)
       value -> {:ok, %{game: value}}
     end
   end
 
-  def get_covers(id, api_key) do
+  def get_sgdb_covers(id, api_key) do
     case Cache.get(covers_key(id)) do
       nil -> fetch(covers_key(id), cover_url(id), :covers, api_key, &parse_covers/1)
       value -> {:ok, %{covers: value}}
     end
   end
 
-  def get_heroes(id, api_key) do
+  def get_sgdb_heroes(id, api_key) do
     case Cache.get(heroes_key(id)) do
       nil -> fetch(heroes_key(id), hero_url(id), :heroes, api_key, &parse_heroes/1)
       value -> {:ok, %{heroes: value}}

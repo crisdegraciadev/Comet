@@ -1,8 +1,7 @@
 defmodule CometWeb.LiveComponents.ImageSelectorComponent do
   use CometWeb, :live_component
 
-  alias Comet.Games.Game.SGDB
-  alias Comet.Games.Game
+  alias Comet.Games
 
   attr :game, :map, required: true
   attr :backdrop_link, :string
@@ -25,8 +24,8 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
       |> assign(:game, game)
       |> assign(:checked, :cover)
       |> assign(:backdrop_link, assigns[:backdrop_link])
-      |> assign_async(:covers, fn -> SGDB.get_covers(game.sgdb_id, api_key) end)
-      |> assign_async(:heroes, fn -> SGDB.get_heroes(game.sgdb_id, api_key) end)
+      |> assign_async(:covers, fn -> Games.get_sgdb_covers(game.sgdb_id, api_key) end)
+      |> assign_async(:heroes, fn -> Games.get_sgdb_heroes(game.sgdb_id, api_key) end)
 
     {:ok, socket}
   end
@@ -127,7 +126,7 @@ defmodule CometWeb.LiveComponents.ImageSelectorComponent do
         %{"url" => url, "field" => field},
         %{assigns: %{game: game, current_scope: current_scope}} = socket
       ) do
-    {:ok, updated_game} = Game.Command.update(game, current_scope.user, Map.put(%{}, field, url))
+    {:ok, updated_game} = Games.update_game(game, current_scope.user, Map.put(%{}, field, url))
 
     socket = socket |> assign(:game, updated_game) |> assign(:checked, String.to_atom(field))
 

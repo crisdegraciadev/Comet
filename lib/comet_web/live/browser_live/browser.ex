@@ -1,8 +1,7 @@
 defmodule CometWeb.BrowserLive.Browser do
   use CometWeb, :live_view
 
-  alias Comet.Games.Game
-  alias Comet.Games.Game.SGDB
+  alias Comet.Games
   alias CometWeb.Utils
 
   import CometWeb.Live.BrowserLive.Components
@@ -76,7 +75,7 @@ defmodule CometWeb.BrowserLive.Browser do
     user = socket.assigns.current_scope.user
     query = socket.assigns.query
 
-    case Game.Command.create(user, game_params) do
+    case Games.create_games(user, game_params) do
       {:ok, game} ->
         {:noreply,
          socket
@@ -89,9 +88,9 @@ defmodule CometWeb.BrowserLive.Browser do
   end
 
   defp assign_game(%{assigns: %{api_key: api_key}} = socket, id) do
-    {:ok, %{game: %{id: id, name: name}}} = SGDB.get_game(id, api_key)
-    {:ok, %{covers: covers}} = SGDB.get_covers(id, api_key)
-    {:ok, %{heroes: heroes}} = SGDB.get_heroes(id, api_key)
+    {:ok, %{game: %{id: id, name: name}}} = Games.get_sgdb_game(id, api_key)
+    {:ok, %{covers: covers}} = Games.get_sgdb_covers(id, api_key)
+    {:ok, %{heroes: heroes}} = Games.get_sgdb_heroes(id, api_key)
 
     sgdb_game = %{
       id: id,
@@ -104,7 +103,7 @@ defmodule CometWeb.BrowserLive.Browser do
   end
 
   defp assign_results(%{assigns: %{query: query}} = socket) do
-    case SGDB.search(query) do
+    case Games.search_sgdb_games(query) do
       {:ok, results} -> socket |> assign(:results, results)
       {:error, reason} -> socket |> put_flash(:error, reason)
     end

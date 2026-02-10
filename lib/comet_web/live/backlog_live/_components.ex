@@ -3,7 +3,7 @@ defmodule CometWeb.Live.BacklogLive.Components do
   use CometWeb, :html
 
   alias Comet.Accounts
-  alias Comet.Games.Game
+  alias Comet.Games
   alias Comet.Tags
 
   alias CometWeb.Utils
@@ -199,7 +199,7 @@ defmodule CometWeb.Live.BacklogLive.Components do
   attr :statuses, :list, required: true
 
   def edit_game_modal(assigns) do
-    changeset = Game.Command.change(%Game{}, assigns.user)
+    changeset = Games.change_game(%Games.Game{}, assigns.user)
 
     assigns = assigns |> assign(:form, to_form(changeset))
 

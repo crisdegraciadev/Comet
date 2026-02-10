@@ -1,6 +1,8 @@
 defmodule Comet.Accounts.UserToken do
   use Ecto.Schema
+
   import Ecto.Query
+
   alias Comet.Accounts.UserToken
 
   @rand_size 32
