@@ -38,8 +38,8 @@ defmodule CometWeb.Live.BacklogLive.Components do
     assigns =
       assign(assigns, %{
         form: form,
-        platforms: Tags.all_platforms(assigns.user),
-        statuses: Tags.all_statuses(assigns.user),
+        platforms: Tags.all(Tags.Platform, assigns.user),
+        statuses: Tags.all(Tags.Status, assigns.user),
         groups: Map.values(@groups),
         sorts: Map.values(@sorts),
         orders: Map.values(@orders)
@@ -95,7 +95,7 @@ defmodule CometWeb.Live.BacklogLive.Components do
   end
 
   attr :streams, :any, required: true
-  attr :preferences, Accounts.Preferences, required: true
+  attr :preferences, Accounts.Preference, required: true
 
   def game_list(assigns) do
     grid_cols =

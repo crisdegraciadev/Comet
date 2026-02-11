@@ -2,7 +2,7 @@ defmodule Comet.Accounts do
   import Ecto.Query, warn: false
 
   alias Comet.Repo
-  alias Comet.Accounts.{Preferences, Profile, User, UserToken}
+  alias Comet.Accounts.{Preference, Profile, User, UserToken}
   alias Comet.Tags
 
   def get_user_by_email(email) when is_binary(email) do
@@ -23,8 +23,8 @@ defmodule Comet.Accounts do
   end
 
   def build_preferences(user) do
-    %Preferences{}
-    |> Preferences.changeset(%{cols: 10, assets: :cover, name: true}, %{user: user})
+    %Preference{}
+    |> Preference.changeset(%{cols: 10, assets: :cover, name: true}, %{user: user})
   end
 
   def build_status_tags(user) do
@@ -151,22 +151,22 @@ defmodule Comet.Accounts do
     |> Repo.preload(profile: :user)
   end
 
-  def change_account_preferences(%Preferences{} = preferences, %User{} = user, attrs \\ %{}) do
-    Preferences.changeset(preferences, attrs, %{user: user})
+  def change_account_preferences(%Preference{} = preferences, %User{} = user, attrs \\ %{}) do
+    Preference.changeset(preferences, attrs, %{user: user})
   end
 
-  def update_account_preferences(%Preferences{} = preferences, %User{} = user, attrs) do
+  def update_account_preferences(%Preference{} = preferences, %User{} = user, attrs) do
     preferences |> change_account_preferences(user, attrs) |> Repo.update()
   end
 
   def create_account_preferences(%User{} = user, attrs) do
-    %Preferences{cols: 8, assets: :cover, show_name: true}
+    %Preference{cols: 8, assets: :cover, show_name: true}
     |> change_account_preferences(user, attrs)
     |> Repo.insert()
   end
 
   def get_account_preferences!(%User{id: user_id}) do
-    Preferences
+    Preference
     |> for_user(user_id)
     |> Repo.one!()
   end

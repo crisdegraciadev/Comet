@@ -75,7 +75,7 @@ defmodule CometWeb.BrowserLive.Browser do
     user = socket.assigns.current_scope.user
     query = socket.assigns.query
 
-    case Games.create_games(user, game_params) do
+    case Games.create_game(user, game_params) do
       {:ok, game} ->
         {:noreply,
          socket

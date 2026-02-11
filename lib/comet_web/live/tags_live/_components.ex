@@ -5,7 +5,7 @@ defmodule CometWeb.Live.TagsLive.Components do
   alias Comet.Accounts
 
   attr :games, :list, required: true
-  attr :preferences, Accounts.Preferences, required: true
+  attr :preferences, Accounts.Preference, required: true
 
   defp demo_game_list(assigns) do
     ~H"""
@@ -22,7 +22,7 @@ defmodule CometWeb.Live.TagsLive.Components do
   end
 
   attr :user, Accounts.User, required: true
-  attr :preferences, Accounts.Preferences, required: true
+  attr :preferences, Accounts.Preference, required: true
   attr :changeset, Ecto.Changeset, required: true
   attr :type, :atom, values: ~w(platforms statuses)a
 
@@ -53,7 +53,7 @@ defmodule CometWeb.Live.TagsLive.Components do
   end
 
   attr :user, Accounts.User, required: true
-  attr :preferences, Accounts.Preferences, required: true
+  attr :preferences, Accounts.Preference, required: true
   attr :changeset, Ecto.Changeset, required: true
   attr :type, :atom, values: ~w(platforms statuses)a
 

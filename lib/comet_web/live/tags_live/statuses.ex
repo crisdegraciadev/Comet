@@ -85,7 +85,7 @@ defmodule CometWeb.TagsLive.Statuses do
   def handle_params(%{"id" => id}, _url, %{assigns: %{live_action: live_action}} = socket)
       when live_action in [:edit, :delete] do
     user = socket.assigns.user
-    status = Tags.get_status!(user, id)
+    status = Tags.get!(Tags.Status, user, id)
 
     socket = socket |> assign(:status, status) |> assign_changetset(status, %{})
 
@@ -101,7 +101,7 @@ defmodule CometWeb.TagsLive.Statuses do
   def handle_event("create", %{"status" => status}, socket) do
     user = socket.assigns.user
 
-    case Tags.create_status(user, status) do
+    case Tags.create(Tags.Status, user, status) do
       {:error, changeset} ->
         {:noreply, socket |> assign(:changeset, changeset)}
 
@@ -119,7 +119,7 @@ defmodule CometWeb.TagsLive.Statuses do
     user = socket.assigns.user
     status = socket.assigns.status
 
-    case Tags.update_status(status, user, status_params) do
+    case Tags.update(status, user, status_params) do
       {:error, changeset} ->
         {:noreply, socket |> assign(:changeset, changeset)}
 
@@ -137,7 +137,7 @@ defmodule CometWeb.TagsLive.Statuses do
     user = socket.assigns.user
     status = socket.assigns.status
 
-    case Tags.delete_status(status, user) do
+    case Tags.delete(status, user) do
       {:error, changeset} ->
         {:noreply, socket |> assign(:changeset, changeset)}
 
@@ -152,7 +152,7 @@ defmodule CometWeb.TagsLive.Statuses do
 
   def handle_event("reload_preview", %{"status" => status}, socket) do
     user = socket.assigns.user
-    changeset = Tags.change_status(%Tags.Status{}, user, status)
+    changeset = Tags.change(%Tags.Status{}, Tags.Status, user, status)
 
     socket = socket |> assign(:changeset, changeset)
 
@@ -161,7 +161,7 @@ defmodule CometWeb.TagsLive.Statuses do
 
   defp assign_changetset(socket, status, attrs) do
     user = socket.assigns.user
-    changeset = Tags.change_status(status, user, attrs)
+    changeset = Tags.change(status, Tags.Status, user, attrs)
 
     socket |> assign(:changeset, changeset)
   end
@@ -171,7 +171,7 @@ defmodule CometWeb.TagsLive.Statuses do
     status_count = Games.count_games_by_status(user)
 
     statuses =
-      Tags.all_statuses(user)
+      Tags.all(Tags.Status, user)
       |> Enum.map(fn s -> Map.put(s, :count, Map.get(status_count, s.id, 0)) end)
       |> Enum.sort(fn s1, s2 -> s1.count > s2.count end)
 

@@ -85,7 +85,7 @@ defmodule CometWeb.TagsLive.Platforms do
   def handle_params(%{"id" => id}, _url, %{assigns: %{live_action: live_action}} = socket)
       when live_action in [:edit, :delete] do
     user = socket.assigns.user
-    platform = Tags.get_platform!(user, id)
+    platform = Tags.get!(Tags.Platform, user, id)
 
     socket = socket |> assign(:platform, platform) |> assign_changetset(platform, %{})
 
@@ -101,7 +101,7 @@ defmodule CometWeb.TagsLive.Platforms do
   def handle_event("create", %{"platform" => platform}, socket) do
     user = socket.assigns.user
 
-    case Tags.create_platform(user, platform) do
+    case Tags.create(Tags.Platform, user, platform) do
       {:error, changeset} ->
         {:noreply, socket |> assign(:changeset, changeset)}
 
@@ -119,7 +119,7 @@ defmodule CometWeb.TagsLive.Platforms do
     user = socket.assigns.user
     platform = socket.assigns.platform
 
-    case Tags.update_platform(platform, user, platform_params) do
+    case Tags.update(platform, user, platform_params) do
       {:error, changeset} ->
         {:noreply, socket |> assign(:changeset, changeset)}
 
@@ -137,7 +137,7 @@ defmodule CometWeb.TagsLive.Platforms do
     user = socket.assigns.user
     platform = socket.assigns.platform
 
-    case Tags.delete_platform(platform, user) do
+    case Tags.delete(platform, user) do
       {:error, changeset} ->
         {:noreply, socket |> assign(:changeset, changeset)}
 
@@ -152,7 +152,7 @@ defmodule CometWeb.TagsLive.Platforms do
 
   def handle_event("reload_preview", %{"platform" => platform}, socket) do
     user = socket.assigns.user
-    changeset = Tags.change_platform(%Tags.Platform{}, user, platform)
+    changeset = Tags.change(%Tags.Platform{}, Tags.Platform, user, platform)
 
     socket = socket |> assign(:changeset, changeset)
 
@@ -161,7 +161,7 @@ defmodule CometWeb.TagsLive.Platforms do
 
   defp assign_changetset(socket, platform, attrs) do
     user = socket.assigns.user
-    changeset = Tags.change_platform(platform, user, attrs)
+    changeset = Tags.change(platform, Tags.Platform, user, attrs)
 
     socket |> assign(:changeset, changeset)
   end
@@ -171,7 +171,7 @@ defmodule CometWeb.TagsLive.Platforms do
     platform_count = Games.count_games_by_platform(user)
 
     platforms =
-      Tags.all_platforms(user)
+      Tags.all(Tags.Platform, user)
       |> Enum.map(fn p -> Map.put(p, :count, Map.get(platform_count, p.id, 0)) end)
       |> Enum.sort(fn p1, p2 -> p1.count > p2.count end)
 

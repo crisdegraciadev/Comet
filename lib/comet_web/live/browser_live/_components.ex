@@ -93,10 +93,10 @@ defmodule CometWeb.Live.BrowserLive.Components do
   def add_game_modal(assigns) do
     changeset = Games.change_game(%Games.Game{}, assigns.user)
 
-    platforms = Tags.all_platforms(assigns.user)
+    platforms = Tags.all(Tags.Platform, assigns.user)
     default_platform = Enum.at(platforms, 0).id
 
-    statuses = Tags.all_statuses(assigns.user)
+    statuses = Tags.all(Tags.Status, assigns.user)
     default_status = Enum.at(statuses, 0).id
 
     assigns =

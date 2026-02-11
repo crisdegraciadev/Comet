@@ -1,4 +1,4 @@
-defmodule Comet.Accounts.Preferences do
+defmodule Comet.Accounts.Preference do
   use Ecto.Schema
   import Ecto.Changeset
 

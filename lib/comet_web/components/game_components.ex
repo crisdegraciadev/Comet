@@ -76,7 +76,7 @@ defmodule CometWeb.GameComponents do
 
   attr :id, :string, required: true
   attr :game, Games.Game, required: true
-  attr :preferences, Accounts.Preferences, required: true
+  attr :preferences, Accounts.Preference, required: true
   attr :path_link, :string
   attr :class, :string, default: nil
 

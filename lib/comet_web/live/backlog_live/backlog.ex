@@ -53,8 +53,8 @@ defmodule CometWeb.BacklogLive.Backlog do
 
     preferences = Accounts.get_account_preferences!(user)
 
-    statuses = Tags.all_statuses(user)
-    platforms = Tags.all_platforms(user)
+    statuses = Tags.all(Tags.Status, user)
+    platforms = Tags.all(Tags.Platform, user)
 
     game_list = Games.all_games(user, %{"sort" => "status", "order" => "asc"})
 

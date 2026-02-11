@@ -1,27 +1,11 @@
-defmodule Comet.Games do
+defmodule Comet.Games.Queries do
   import Ecto.Query
 
-  alias Comet.Repo
+  alias Comet.Accounts.User
   alias Comet.Games.Game
-  alias Comet.Accounts
+  alias Comet.Repo
 
-  def change_game(%Game{} = game, %Accounts.User{} = user, attrs \\ %{}) do
-    Game.changeset(game, attrs, %{user: user})
-  end
-
-  def delete_game!(%Game{} = game) do
-    Repo.delete!(game)
-  end
-
-  def update_game(%Game{} = game, %Accounts.User{} = user, attrs) do
-    game |> change_game(user, attrs) |> Repo.update()
-  end
-
-  def create_games(%Accounts.User{} = user, attrs) do
-    %Game{} |> change_game(user, attrs) |> Repo.insert()
-  end
-
-  def all_games(%Accounts.User{id: user_id}, filter \\ %{}) do
+  def all_games(%User{id: user_id}, filter \\ %{}) do
     Game
     |> for_user(user_id)
     |> with_status(filter["status_id"])
@@ -40,17 +24,17 @@ defmodule Comet.Games do
     |> Repo.all()
   end
 
-  def get_game!(%Accounts.User{id: user_id}, id) when is_integer(id) do
+  def get_game!(%User{id: user_id}, id) when is_integer(id) do
     Game
     |> for_user(user_id)
     |> preload_static_data()
     |> Repo.get!(id)
   end
 
-  def get_game!(%Accounts.User{} = user, id) when is_binary(id),
+  def get_game!(%User{} = user, id) when is_binary(id),
     do: get_game!(user, String.to_integer(id))
 
-  def count_games_by_platform(%Accounts.User{id: user_id}) do
+  def count_games_by_platform(%User{id: user_id}) do
     Game
     |> for_user(user_id)
     |> count_by(:platform_id)
@@ -58,7 +42,7 @@ defmodule Comet.Games do
     |> Map.new()
   end
 
-  def count_games_by_status(%Accounts.User{id: user_id}) do
+  def count_games_by_status(%User{id: user_id}) do
     Game
     |> for_user(user_id)
     |> count_by(:status_id)
@@ -119,9 +103,4 @@ defmodule Comet.Games do
   end
 
   defp preload_static_data(query), do: preload(query, [:status, :platform])
-
-  defdelegate search_sgdb_games(term), to: Comet.Games.SGDB
-  defdelegate get_sgdb_game(id, api_key), to: Comet.Games.SGDB
-  defdelegate get_sgdb_covers(id, api_key), to: Comet.Games.SGDB
-  defdelegate get_sgdb_heroes(id, api_key), to: Comet.Games.SGDB
 end
